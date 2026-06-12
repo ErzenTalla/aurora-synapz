@@ -1,0 +1,7 @@
+node_modules/
+.env
+db/aurora.db
+db/aurora.db-shm
+db/aurora.db-wal
+index.html
+.claude/

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Portal Login — Aurora Synapz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:  #0D1B2A;
+      --navy2: #091420;
+      --gold:  #C9A84C;
+      --gold2: #E2C870;
+      --cream: #F5F0E8;
+      --muted: rgba(245,240,232,0.55);
+      --serif: 'Cormorant Garamond', serif;
+      --sans:  'Inter', sans-serif;
+    }
+    body {
+      font-family: var(--sans);
+      background: var(--navy2);
+      color: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+    }
+
+    /* Left panel */
+    .left {
+      flex: 1;
+      background:
+        linear-gradient(135deg, #060F18 0%, #0D1B2A 60%, #152E45 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .left-logo { position: relative; z-index: 1; text-align: center; }
+    .left-logo img { width: 200px; height: auto; margin-bottom: 32px; }
+    .left-headline {
+      font-family: var(--serif);
+      font-size: 36px;
+      font-weight: 300;
+      line-height: 1.3;
+      text-align: center;
+      max-width: 360px;
+      position: relative;
+      z-index: 1;
+    }
+    .left-headline strong { color: var(--gold); font-weight: 600; }
+    .left-line {
+      width: 48px; height: 2px; background: var(--gold);
+      margin: 28px auto; position: relative; z-index: 1;
+    }
+    .left-sub {
+      font-size: 13px; color: var(--muted); text-align: center;
+      max-width: 320px; line-height: 1.8; position: relative; z-index: 1;
+    }
+    .left-watermark {
+      position: absolute;
+      bottom: -40px; right: -40px;
+      width: 320px; opacity: 0.04;
+    }
+
+    /* Right panel */
+    .right {
+      width: 480px;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 52px;
+      border-left: 1px solid rgba(201,168,76,0.1);
+    }
+
+    .form-eyebrow {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.25em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 12px;
+    }
+    .form-title {
+      font-family: var(--serif);
+      font-size: 32px; font-weight: 400;
+      color: var(--cream); margin-bottom: 8px;
+    }
+    .form-sub { font-size: 13px; color: var(--muted); margin-bottom: 40px; line-height: 1.7; }
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%;
+      background: rgba(21,46,69,0.5);
+      border: 1px solid rgba(201,168,76,0.2);
+      color: var(--cream);
+      padding: 14px 16px;
+      font-family: var(--sans); font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .field input::placeholder { color: rgba(245,240,232,0.25); }
+    .field input:focus { border-color: var(--gold); }
+
+    .btn-login {
+      width: 100%;
+      background: var(--gold);
+      color: var(--navy);
+      border: none;
+      padding: 16px;
+      font-family: var(--sans); font-size: 12px;
+      font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-login:hover { background: var(--gold2); transform: translateY(-1px); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      background: rgba(220,60,60,0.12);
+      border: 1px solid rgba(220,60,60,0.4);
+      color: #ff8080;
+      padding: 12px 16px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    .demo-hint {
+      margin-top: 32px;
+      padding: 16px;
+      border: 1px dashed rgba(201,168,76,0.25);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    .demo-hint strong { color: var(--gold); }
+    .demo-fill {
+      background: none; border: none; color: var(--gold);
+      font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
+      cursor: pointer; text-decoration: underline; padding: 0;
+      margin-top: 8px; display: block; font-family: var(--sans);
+    }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--muted); font-size: 12px; text-decoration: none;
+      margin-bottom: 48px; transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--gold); }
+    .back-link svg { width: 14px; height: 14px; }
+
+    @media (max-width: 900px) {
+      .left { display: none; }
+      .right { width: 100%; padding: 40px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left">
+  <div class="left-logo">
+    <img src="/assets/logos/SampleLogo+text.png" alt="Aurora Synapz" />
+  </div>
+  <h2 class="left-headline">Your Portfolio.<br /><strong>Intelligently Managed.</strong></h2>
+  <div class="left-line"></div>
+  <p class="left-sub">Access your real-time portfolio performance, holdings, documents, and account activity — all in one secure place.</p>
+  <img class="left-watermark" src="/assets/logos/SampleFinalLogo.png" alt="" aria-hidden="true" />
+</div>
+
+<div class="right">
+  <a href="/" class="back-link">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+    Back to website
+  </a>
+  <div class="form-eyebrow">Client Portal</div>
+  <h1 class="form-title">Welcome Back</h1>
+  <p class="form-sub">Sign in with your registered email and password to access your account.</p>
+
+  <div class="error-msg" id="error-msg"></div>
+
+  <form id="login-form">
+    <div class="field">
+      <label for="email">Email Address</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+    </div>
+    <button class="btn-login" type="submit" id="submit-btn">Sign In to Portal</button>
+  </form>
+
+  <div class="demo-hint">
+    <strong>Demo Account</strong><br />
+    Use the credentials below to explore the client portal.
+    <button class="demo-fill" onclick="fillDemo()">Fill demo credentials</button>
+  </div>
+</div>
+
+<script>
+  function fillDemo() {
+    document.getElementById('email').value    = 'demo@aurorasyanapz.com';
+    document.getElementById('password').value = 'Demo1234!';
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    const err = document.getElementById('error-msg');
+    err.classList.remove('show');
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email:    document.getElementById('email').value.trim(),
+          password: document.getElementById('password').value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      localStorage.setItem('aurora_token', data.token);
+      localStorage.setItem('aurora_user',  JSON.stringify(data.user));
+      window.location.href = '/dashboard.html';
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Sign In to Portal';
+    }
+  });
+
+  // Redirect if already logged in
+  if (localStorage.getItem('aurora_token')) {
+    window.location.href = '/dashboard.html';
+  }
+</script>
+</body>
+</html>
