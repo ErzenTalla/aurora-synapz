@@ -1,12 +1,15 @@
-const BASE = 'https://api.alpaca.markets';
+function base() {
+  return (process.env.ALPACA_ENDPOINT || 'https://api.alpaca.markets/v2').replace(/\/$/, '');
+}
 
 function isConfigured() {
   const key = process.env.ALPACA_API_KEY || '';
-  return key && key !== 'your_alpaca_api_key_here';
+  return !!(key && key !== 'your_alpaca_api_key_here');
 }
 
 async function alpacaFetch(path, opts = {}) {
-  const res = await fetch(`${BASE}${path}`, {
+  const url = `${base()}${path}`;
+  const res = await fetch(url, {
     ...opts,
     headers: {
       'APCA-API-KEY-ID':     process.env.ALPACA_API_KEY || '',
@@ -17,15 +20,15 @@ async function alpacaFetch(path, opts = {}) {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Alpaca ${res.status} on ${path}: ${text}`);
+    throw new Error(`Alpaca ${res.status} [${path}]: ${text}`);
   }
   return res.json();
 }
 
 module.exports = {
   isConfigured,
-  getAccount:        ()       => alpacaFetch('/v2/account'),
-  getPositions:      ()       => alpacaFetch('/v2/positions'),
-  getPortfolioHistory: (qs='') => alpacaFetch(`/v2/account/portfolio/history${qs}`),
-  submitOrder: (body)          => alpacaFetch('/v2/orders', { method: 'POST', body: JSON.stringify(body) }),
+  getAccount:          ()    => alpacaFetch('/account'),
+  getPositions:        ()    => alpacaFetch('/positions'),
+  getPortfolioHistory: (qs)  => alpacaFetch(`/account/portfolio/history${qs || ''}`),
+  submitOrder:         (body) => alpacaFetch('/orders', { method: 'POST', body: JSON.stringify(body) }),
 };
