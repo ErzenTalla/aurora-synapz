@@ -1,5 +1,11 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index.js" }
+  ],
+  "crons": [
+    {
+      "path": "/api/alpaca/sync",
+      "schedule": "0 21 * * 1-5"
+    }
   ]
 }

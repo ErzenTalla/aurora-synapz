@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deposit Funds — Aurora Synapz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:  #0D1B2A; --navy2: #091420; --navy3: #060F18; --navyM: #152E45;
+      --gold:  #C9A84C; --gold2: #E2C870;
+      --cream: #F5F0E8; --muted: rgba(245,240,232,0.5); --muted2: rgba(245,240,232,0.7);
+      --green: #4CAF7D; --red: #E05252;
+      --serif: 'Cormorant Garamond', serif; --sans: 'Inter', sans-serif;
+    }
+    body { font-family: var(--sans); background: var(--navy3); color: var(--cream); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── TOP NAV ── */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      background: var(--navy);
+    }
+    nav img { height: 40px; }
+    .nav-back {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--muted); font-size: 13px; text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--gold); }
+    .nav-back svg { width: 16px; height: 16px; }
+
+    /* ── MAIN LAYOUT ── */
+    .page { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 60px 20px 80px; gap: 40px; }
+    @media (max-width: 900px) { .page { flex-direction: column; align-items: center; padding: 40px 20px; } }
+
+    /* ── LEFT PANEL ── */
+    .left-panel { width: 420px; flex-shrink: 0; }
+    @media (max-width: 900px) { .left-panel { width: 100%; max-width: 500px; } }
+
+    .panel-title {
+      font-family: var(--serif); font-size: 36px; font-weight: 400; color: var(--cream);
+      margin-bottom: 8px;
+    }
+    .panel-sub { font-size: 14px; color: var(--muted); margin-bottom: 40px; line-height: 1.6; }
+
+    .amount-label { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+
+    .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .preset-btn {
+      background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.15);
+      color: var(--muted2); padding: 12px; font-family: var(--sans);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; text-align: center;
+    }
+    .preset-btn:hover { background: rgba(201,168,76,0.12); color: var(--cream); border-color: rgba(201,168,76,0.35); }
+    .preset-btn.active { background: rgba(201,168,76,0.15); color: var(--gold); border-color: var(--gold); }
+
+    .custom-input-wrap { position: relative; margin-bottom: 32px; }
+    .currency-sign {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--gold); font-size: 18px; font-weight: 600; pointer-events: none;
+    }
+    .custom-input {
+      width: 100%; background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.2);
+      color: var(--cream); padding: 16px 16px 16px 36px;
+      font-family: var(--serif); font-size: 28px; font-weight: 600;
+      outline: none; transition: border-color 0.2s;
+    }
+    .custom-input:focus { border-color: var(--gold); }
+    .custom-input::placeholder { color: var(--muted); }
+
+    /* ── ALLOCATION BREAKDOWN ── */
+    .alloc-card {
+      background: var(--navy); border: 1px solid rgba(201,168,76,0.1);
+      padding: 24px; margin-bottom: 24px;
+    }
+    .alloc-card-title { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .alloc-rows { display: flex; flex-direction: column; gap: 14px; }
+    .alloc-row { display: flex; align-items: center; justify-content: space-between; }
+    .alloc-left { display: flex; align-items: center; gap: 12px; }
+    .alloc-bar-wrap { width: 80px; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; }
+    .alloc-bar { height: 100%; border-radius: 2px; }
+    .alloc-sym { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; color: var(--cream); }
+    .alloc-desc { font-size: 11px; color: var(--muted); }
+    .alloc-right { text-align: right; }
+    .alloc-pct { font-size: 12px; font-weight: 700; color: var(--gold); }
+    .alloc-dollar { font-size: 13px; color: var(--muted2); }
+    .cash-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; }
+    .cash-label { font-size: 12px; color: var(--muted); }
+    .cash-value { font-size: 12px; font-weight: 600; color: var(--muted2); }
+
+    /* ── RIGHT PANEL (Stripe form) ── */
+    .right-panel { width: 420px; flex-shrink: 0; }
+    @media (max-width: 900px) { .right-panel { width: 100%; max-width: 500px; } }
+
+    .payment-card {
+      background: var(--navy); border: 1px solid rgba(201,168,76,0.12);
+      padding: 36px;
+    }
+    .payment-card-title { font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--cream); margin-bottom: 6px; }
+    .payment-card-sub { font-size: 12px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+
+    .form-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block; }
+
+    #payment-element { margin-bottom: 28px; }
+
+    .btn-deposit {
+      width: 100%; padding: 18px;
+      background: var(--gold); color: var(--navy);
+      border: none; font-family: var(--sans); font-size: 13px;
+      font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.2s; position: relative;
+    }
+    .btn-deposit:hover:not(:disabled) { background: var(--gold2); }
+    .btn-deposit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-deposit .spinner {
+      display: none; width: 18px; height: 18px;
+      border: 2px solid rgba(13,27,42,0.3);
+      border-top-color: var(--navy);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+    }
+    .btn-deposit.loading .spinner { display: block; }
+    @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+    #error-msg { margin-top: 14px; padding: 12px 16px; background: rgba(224,82,82,0.1); border: 1px solid rgba(224,82,82,0.3); color: var(--red); font-size: 13px; display: none; }
+    #success-msg { margin-top: 14px; padding: 12px 16px; background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); color: var(--green); font-size: 13px; display: none; }
+
+    .not-configured {
+      background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.2);
+      padding: 24px; color: var(--muted); font-size: 13px; line-height: 1.7;
+    }
+    .not-configured strong { color: var(--gold); font-weight: 600; display: block; margin-bottom: 8px; }
+    .not-configured code { background: rgba(255,255,255,0.06); padding: 2px 6px; font-family: monospace; font-size: 12px; }
+
+    .secure-badge { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--muted); font-size: 11px; justify-content: center; }
+    .secure-badge svg { width: 14px; height: 14px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <img src="/assets/logos/SampleLogo+text.png" alt="Aurora Synapz" />
+  <a href="/dashboard.html" class="nav-back">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+    Back to Dashboard
+  </a>
+</nav>
+
+<div class="page">
+
+  <!-- LEFT: amount + allocation -->
+  <div class="left-panel">
+    <div class="panel-title">Deposit Funds</div>
+    <div class="panel-sub">Choose an amount below. Funds will be automatically invested according to your allocation strategy.</div>
+
+    <div class="amount-label">Select Amount</div>
+    <div class="presets">
+      <button class="preset-btn" data-amount="500">$500</button>
+      <button class="preset-btn" data-amount="1000">$1,000</button>
+      <button class="preset-btn active" data-amount="2500">$2,500</button>
+      <button class="preset-btn" data-amount="5000">$5,000</button>
+      <button class="preset-btn" data-amount="10000">$10,000</button>
+      <button class="preset-btn" data-amount="25000">$25,000</button>
+    </div>
+
+    <div class="custom-input-wrap">
+      <span class="currency-sign">$</span>
+      <input type="number" class="custom-input" id="amount-input" value="2500" min="100" step="100" placeholder="0" />
+    </div>
+
+    <div class="alloc-card">
+      <div class="alloc-card-title">Allocation Breakdown</div>
+      <div class="alloc-rows">
+        <div class="alloc-row">
+          <div class="alloc-left">
+            <div>
+              <div class="alloc-bar-wrap"><div class="alloc-bar" style="width:40%;background:#C9A84C;"></div></div>
+            </div>
+            <div>
+              <div class="alloc-sym">SPY</div>
+              <div class="alloc-desc">S&P 500 — Equity Growth</div>
+            </div>
+          </div>
+          <div class="alloc-right">
+            <div class="alloc-pct">40%</div>
+            <div class="alloc-dollar" id="spy-amount">$1,000.00</div>
+          </div>
+        </div>
+        <div class="alloc-row">
+          <div class="alloc-left">
+            <div>
+              <div class="alloc-bar-wrap"><div class="alloc-bar" style="width:30%;background:#8AB4F8;"></div></div>
+            </div>
+            <div>
+              <div class="alloc-sym">BND</div>
+              <div class="alloc-desc">Total Bond — Fixed Income</div>
+            </div>
+          </div>
+          <div class="alloc-right">
+            <div class="alloc-pct">30%</div>
+            <div class="alloc-dollar" id="bnd-amount">$750.00</div>
+          </div>
+        </div>
+        <div class="alloc-row">
+          <div class="alloc-left">
+            <div>
+              <div class="alloc-bar-wrap"><div class="alloc-bar" style="width:20%;background:#4CAF7D;"></div></div>
+            </div>
+            <div>
+              <div class="alloc-sym">GLD</div>
+              <div class="alloc-desc">Gold — Inflation Hedge</div>
+            </div>
+          </div>
+          <div class="alloc-right">
+            <div class="alloc-pct">20%</div>
+            <div class="alloc-dollar" id="gld-amount">$500.00</div>
+          </div>
+        </div>
+      </div>
+      <div class="cash-row">
+        <span class="cash-label">Cash Reserve (10%)</span>
+        <span class="cash-value" id="cash-amount">$250.00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Stripe form -->
+  <div class="right-panel">
+    <div class="payment-card" id="payment-card">
+      <div class="payment-card-title">Payment Details</div>
+      <div class="payment-card-sub">Your deposit of <strong id="summary-amount" style="color:var(--gold)">$2,500.00</strong> will be invested immediately after processing.</div>
+
+      <div id="stripe-mount">
+        <label class="form-label">Card Information</label>
+        <div id="payment-element"></div>
+        <button class="btn-deposit" id="deposit-btn">
+          Deposit <span id="btn-amount">$2,500.00</span>
+          <div class="spinner"></div>
+        </button>
+        <div id="error-msg"></div>
+        <div id="success-msg"></div>
+      </div>
+
+      <div id="not-configured-msg" style="display:none;" class="not-configured">
+        <strong>Stripe Not Configured</strong>
+        Add your Stripe API keys to <code>.env</code> (and Vercel environment variables) to enable deposits:
+        <br><br>
+        <code>STRIPE_PUBLISHABLE_KEY=pk_test_...</code><br>
+        <code>STRIPE_SECRET_KEY=sk_test_...</code>
+        <br><br>
+        Get your test keys at <strong>dashboard.stripe.com → Developers → API keys</strong>
+      </div>
+
+      <div class="secure-badge">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+        Payments secured by Stripe · 256-bit SSL
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const token = localStorage.getItem('aurora_token');
+  if (!token) window.location.href = '/login.html';
+
+  const fmt = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+
+  let amount = 2500;
+  let stripe, elements;
+
+  // ── Amount UI ──
+  function updateAmount(val) {
+    amount = Math.max(100, parseFloat(val) || 100);
+    document.getElementById('amount-input').value = amount;
+    document.getElementById('spy-amount').textContent  = fmt(amount * 0.40);
+    document.getElementById('bnd-amount').textContent  = fmt(amount * 0.30);
+    document.getElementById('gld-amount').textContent  = fmt(amount * 0.20);
+    document.getElementById('cash-amount').textContent = fmt(amount * 0.10);
+    document.getElementById('summary-amount').textContent = fmt(amount);
+    document.getElementById('btn-amount').textContent  = fmt(amount);
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateAmount(btn.dataset.amount);
+    });
+  });
+
+  document.getElementById('amount-input').addEventListener('input', e => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    updateAmount(e.target.value);
+  });
+
+  // ── Init Stripe ──
+  async function initStripe() {
+    const res = await fetch('/api/stripe/config', { headers: { Authorization: `Bearer ${token}` } });
+    const config = await res.json();
+
+    if (!config.configured) {
+      document.getElementById('stripe-mount').style.display = 'none';
+      document.getElementById('not-configured-msg').style.display = 'block';
+      return;
+    }
+
+    stripe = Stripe(config.publishableKey);
+    await mountElements();
+  }
+
+  async function mountElements() {
+    // Create a PaymentIntent for the current amount
+    const r = await fetch('/api/stripe/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ amount }),
+    });
+    const { clientSecret, error } = await r.json();
+    if (error) { showError(error); return; }
+
+    const appearance = {
+      theme: 'night',
+      variables: { colorPrimary: '#C9A84C', colorBackground: '#091420', colorText: '#F5F0E8', colorDanger: '#E05252', fontFamily: 'Inter, sans-serif', borderRadius: '0px' },
+    };
+    elements = stripe.elements({ clientSecret, appearance });
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element');
+    document.getElementById('deposit-btn').disabled = false;
+  }
+
+  // ── Submit ──
+  document.getElementById('deposit-btn').addEventListener('click', async () => {
+    if (!stripe || !elements) return;
+    setLoading(true);
+    hideMessages();
+
+    const returnUrl = `${window.location.origin}/dashboard.html?payment_intent={PAYMENT_INTENT}&redirect_status={REDIRECT_STATUS}&amount=${amount}`;
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/dashboard.html?amount=${amount}`,
+      },
+    });
+
+    // confirmPayment only lands here if there's an immediate error (card declined, etc.)
+    // On success it redirects automatically
+    if (error) {
+      showError(error.message);
+      setLoading(false);
+    }
+  });
+
+  function setLoading(on) {
+    const btn = document.getElementById('deposit-btn');
+    btn.disabled = on;
+    btn.classList.toggle('loading', on);
+  }
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideMessages() {
+    document.getElementById('error-msg').style.display   = 'none';
+    document.getElementById('success-msg').style.display = 'none';
+  }
+
+  updateAmount(2500);
+  initStripe();
+</script>
+</body>
+</html>

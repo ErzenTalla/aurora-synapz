@@ -78,6 +78,26 @@ async function setup() {
       size_kb    INTEGER     NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS stripe_payments (
+      id                       SERIAL PRIMARY KEY,
+      user_id                  INTEGER     NOT NULL REFERENCES users(id),
+      stripe_payment_intent_id TEXT        NOT NULL UNIQUE,
+      amount                   NUMERIC     NOT NULL,
+      status                   TEXT        NOT NULL DEFAULT 'pending',
+      created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS alpaca_sync_log (
+      id              SERIAL PRIMARY KEY,
+      user_id         INTEGER     NOT NULL REFERENCES users(id),
+      account_value   NUMERIC,
+      positions_count INTEGER,
+      synced_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS perf_history_user_date
+      ON performance_history (user_id, date);
   `);
 }
 
