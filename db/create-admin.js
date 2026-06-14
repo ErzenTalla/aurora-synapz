@@ -10,8 +10,19 @@ async function createAdmin() {
 
   const hash = await bcrypt.hash(password, 12);
 
-  // Remove existing account with this email if any
-  await pool.query('DELETE FROM users WHERE email = $1', [email]);
+  // Remove existing account with this email if any (cascade dependents first)
+  const { rows: [existing] } = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+  if (existing) {
+    const uid = existing.id;
+    await pool.query('DELETE FROM performance_history WHERE user_id = $1', [uid]);
+    await pool.query('DELETE FROM documents           WHERE user_id = $1', [uid]);
+    await pool.query('DELETE FROM transactions        WHERE user_id = $1', [uid]);
+    await pool.query('DELETE FROM holdings            WHERE user_id = $1', [uid]);
+    await pool.query('DELETE FROM portfolios          WHERE user_id = $1', [uid]);
+    await pool.query('DELETE FROM alpaca_sync_log     WHERE user_id = $1', [uid]);
+    await pool.query('DELETE FROM stripe_payments     WHERE user_id = $1', [uid]);
+    await pool.query('DELETE FROM users               WHERE id      = $1', [uid]);
+  }
 
   const { rows } = await pool.query(
     `INSERT INTO users (name, email, password, role)

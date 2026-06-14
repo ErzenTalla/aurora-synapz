@@ -29,6 +29,28 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.post('/change-password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password are required' });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters' });
+  }
+  try {
+    const { rows } = await db.query('SELECT password FROM users WHERE id = $1', [req.user.id]);
+    if (!rows[0] || !bcrypt.compareSync(currentPassword, rows[0].password)) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    const hash = await bcrypt.hash(newPassword, 12);
+    await db.query('UPDATE users SET password = $1 WHERE id = $2', [hash, req.user.id]);
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { rows } = await db.query(
