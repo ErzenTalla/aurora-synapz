@@ -3,6 +3,8 @@ node_modules/
 db/aurora.db
 db/aurora.db-shm
 db/aurora.db-wal
-index.html
+/index.html
 .claude/
 Aurora Synapz Asset Management LLC/
+.vercel
+.env*

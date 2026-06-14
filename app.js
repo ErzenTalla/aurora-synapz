@@ -8,6 +8,7 @@ const contactRoutes = require('./routes/contact');
 const portalRoutes  = require('./routes/portal');
 const stripeRoutes  = require('./routes/stripe');
 const alpacaRoutes  = require('./routes/alpaca');
+const adminRoutes   = require('./routes/admin');
 
 const app = express();
 app.use(cors());
@@ -23,6 +24,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/portal',  portalRoutes);
 app.use('/api/stripe',  stripeRoutes);
 app.use('/api/alpaca',  alpacaRoutes);
+app.use('/api/admin',   adminRoutes);
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

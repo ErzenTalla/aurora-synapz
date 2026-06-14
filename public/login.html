@@ -242,7 +242,7 @@
       if (!res.ok) throw new Error(data.error || 'Login failed');
       localStorage.setItem('aurora_token', data.token);
       localStorage.setItem('aurora_user',  JSON.stringify(data.user));
-      window.location.href = '/dashboard.html';
+      window.location.href = data.user.role === 'admin' ? '/admin.html' : '/dashboard.html';
     } catch (ex) {
       err.textContent = ex.message;
       err.classList.add('show');

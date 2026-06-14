@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Aurora Synapz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:   #0D1B2A;
+      --navy2:  #091420;
+      --navy3:  #060F18;
+      --navyM:  #152E45;
+      --gold:   #C9A84C;
+      --gold2:  #E2C870;
+      --cream:  #F5F0E8;
+      --muted:  rgba(245,240,232,0.5);
+      --muted2: rgba(245,240,232,0.7);
+      --green:  #4CAF7D;
+      --red:    #E05252;
+      --blue:   #8AB4F8;
+      --serif:  'Cormorant Garamond', serif;
+      --sans:   'Inter', sans-serif;
+      --sidebar: 260px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans);
+      background: var(--navy3);
+      color: var(--cream);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar);
+      background: var(--navy);
+      border-right: 1px solid rgba(201,168,76,0.1);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 50; transition: transform 0.3s;
+    }
+    .sidebar-logo { padding: 28px 24px 24px; border-bottom: 1px solid rgba(201,168,76,0.1); }
+    .sidebar-logo img { width: 140px; height: auto; }
+    .sidebar-badge {
+      display: inline-block; margin-top: 10px;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+      background: rgba(201,168,76,0.15); color: var(--gold);
+      padding: 3px 10px;
+    }
+
+    .sidebar-nav { flex: 1; padding: 20px 0; overflow-y: auto; }
+    .nav-section-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--muted); padding: 12px 24px 8px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 24px; cursor: pointer;
+      color: var(--muted2); font-size: 13px; font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+      border-left: 2px solid transparent;
+      user-select: none; text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(201,168,76,0.06); color: var(--cream); }
+    .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,168,76,0.08); }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(201,168,76,0.1); }
+    .user-card { display: flex; align-items: center; gap: 12px; }
+    .user-avatar {
+      width: 36px; height: 36px; background: var(--gold); color: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--cream); }
+    .user-role { font-size: 11px; color: var(--gold); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+    .btn-logout {
+      margin-top: 12px; width: 100%;
+      background: none; border: 1px solid rgba(201,168,76,0.2);
+      color: var(--muted); padding: 8px;
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── TOPBAR (mobile) ── */
+    .topbar {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); border-bottom: 1px solid rgba(201,168,76,0.1);
+      height: 60px; align-items: center; justify-content: space-between; padding: 0 20px;
+    }
+    .topbar img { height: 36px; }
+    .burger { background: none; border: none; cursor: pointer; color: var(--cream); }
+    .burger svg { width: 22px; height: 22px; }
+
+    /* ── MAIN ── */
+    .main { margin-left: var(--sidebar); flex: 1; min-width: 0; padding: 40px 40px 60px; }
+
+    /* ── PAGE SECTIONS ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 36px; padding-bottom: 24px;
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+    }
+    .page-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .page-title { font-family: var(--serif); font-size: 32px; font-weight: 400; color: var(--cream); }
+
+    /* ── STAT CARDS ── */
+    .cards-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--navy); border: 1px solid rgba(201,168,76,0.1);
+      padding: 24px; position: relative; overflow: hidden; transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: rgba(201,168,76,0.3); }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--gold) 0%, transparent 100%);
+    }
+    .stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .stat-value { font-family: var(--serif); font-size: 30px; font-weight: 600; color: var(--cream); line-height: 1; }
+    .stat-sub { font-size: 12px; margin-top: 6px; color: var(--muted); }
+
+    /* ── TABLE CARD ── */
+    .table-card {
+      background: var(--navy); border: 1px solid rgba(201,168,76,0.1); margin-bottom: 32px;
+    }
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 28px; border-bottom: 1px solid rgba(201,168,76,0.1);
+    }
+    .table-title { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--cream); }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 12px 20px; text-align: left;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+      border-bottom: 1px solid rgba(201,168,76,0.08);
+    }
+    thead th:not(:first-child) { text-align: right; }
+    tbody td {
+      padding: 14px 20px; font-size: 13px; color: var(--cream);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    tbody td:not(:first-child) { text-align: right; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(201,168,76,0.04); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      background: none; border: 1px solid rgba(201,168,76,0.25);
+      color: var(--muted2); padding: 6px 16px;
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-primary {
+      background: var(--gold); border: 1px solid var(--gold);
+      color: var(--navy); padding: 8px 20px;
+      font-family: var(--sans); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--gold2); }
+    .btn-danger {
+      background: none; border: 1px solid rgba(224,82,82,0.3);
+      color: rgba(224,82,82,0.7); padding: 5px 12px;
+      font-family: var(--sans); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-danger:hover { border-color: var(--red); color: var(--red); }
+    .btn-view {
+      background: none; border: 1px solid rgba(201,168,76,0.2);
+      color: var(--muted2); padding: 5px 12px;
+      font-family: var(--sans); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-view:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── ROLE BADGE ── */
+    .role-badge {
+      display: inline-block; padding: 2px 10px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .role-client { background: rgba(138,180,248,0.12); color: var(--blue); }
+    .role-admin  { background: rgba(201,168,76,0.15); color: var(--gold); }
+
+    /* ── STATUS BADGE ── */
+    .status-badge {
+      display: inline-block; padding: 2px 10px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .status-succeeded { background: rgba(76,175,125,0.15); color: var(--green); }
+    .status-pending   { background: rgba(201,168,76,0.12); color: var(--gold); }
+    .status-failed    { background: rgba(224,82,82,0.12); color: var(--red); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(6,15,24,0.85);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--navy); border: 1px solid rgba(201,168,76,0.2);
+      width: 480px; max-width: 95vw;
+      padding: 36px; position: relative;
+    }
+    .modal-title { font-family: var(--serif); font-size: 24px; font-weight: 600; color: var(--cream); margin-bottom: 24px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; color: var(--muted);
+      font-size: 22px; cursor: pointer; line-height: 1; padding: 4px 8px;
+    }
+    .modal-close:hover { color: var(--cream); }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block; font-size: 10px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+    }
+    .field input, .field select {
+      width: 100%; background: rgba(21,46,69,0.5);
+      border: 1px solid rgba(201,168,76,0.2); color: var(--cream);
+      padding: 12px 14px; font-family: var(--sans); font-size: 13px;
+      outline: none; transition: border-color 0.2s; -webkit-appearance: none;
+    }
+    .field input::placeholder { color: rgba(245,240,232,0.25); }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .field select option { background: var(--navy); }
+
+    .modal-error {
+      background: rgba(220,60,60,0.1); border: 1px solid rgba(220,60,60,0.35);
+      color: #ff8080; padding: 10px 14px; font-size: 12px; margin-bottom: 16px; display: none;
+    }
+    .modal-error.show { display: block; }
+
+    /* ── USER DETAIL PAGE ── */
+    .detail-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--muted); font-size: 12px; cursor: pointer;
+      margin-bottom: 28px; transition: color 0.2s; background: none; border: none;
+      font-family: var(--sans);
+    }
+    .detail-back:hover { color: var(--gold); }
+    .detail-back svg { width: 14px; height: 14px; }
+    .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+
+    /* ── CONTACTS TABLE — left-align all ── */
+    #contacts-table thead th,
+    #contacts-table tbody td { text-align: left !important; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 32px; right: 32px; z-index: 999;
+      background: var(--navy); border: 1px solid rgba(201,168,76,0.3);
+      padding: 16px 24px; max-width: 360px;
+      display: flex; align-items: flex-start; gap: 14px;
+      transform: translateY(100px); opacity: 0;
+      transition: transform 0.3s, opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .toast-icon svg { width: 20px; height: 20px; }
+    .toast-icon.ok  { color: var(--green); }
+    .toast-icon.err { color: var(--red); }
+    .toast-title { font-size: 13px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
+    .toast-body  { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+    .toast-close { margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; flex-shrink: 0; padding: 0; line-height: 1; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { padding: 48px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    /* ── SKELETON ── */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 2px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1200px) { .cards-row { grid-template-columns: repeat(2, 1fr); } .detail-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .topbar { display: flex; }
+      .main { margin-left: 0; padding: 80px 20px 40px; }
+      .cards-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) { .cards-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- Mobile topbar -->
+<div class="topbar">
+  <img src="/assets/logos/SampleFinalLogo.png" alt="Aurora Synapz" />
+  <button class="burger" id="burger">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+  </button>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="/assets/logos/SampleLogo+text.png" alt="Aurora Synapz" />
+    <div class="sidebar-badge">Admin Panel</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Management</div>
+    <div class="nav-item active" data-page="overview">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Overview
+    </div>
+    <div class="nav-item" data-page="clients">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+      Clients
+    </div>
+    <div class="nav-item" data-page="contacts">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+      Contacts
+    </div>
+    <div class="nav-item" data-page="deposits">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75"/></svg>
+      Deposits
+    </div>
+    <div class="nav-section-label" style="margin-top:8px;">Portal</div>
+    <a href="/dashboard.html" class="nav-item" style="text-decoration:none;">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"/></svg>
+      My Portfolio
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="user-avatar">ET</div>
+      <div>
+        <div class="user-name" id="user-name">Loading…</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- ── OVERVIEW PAGE ── -->
+  <div class="page active" id="page-overview">
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Administration</div>
+        <h1 class="page-title">Overview</h1>
+      </div>
+    </div>
+
+    <div class="cards-row" id="stat-cards">
+      <div class="stat-card"><div class="stat-label">Total AUM</div><div class="stat-value skeleton" style="height:36px;width:160px;"></div></div>
+      <div class="stat-card"><div class="stat-label">Active Clients</div><div class="stat-value skeleton" style="height:36px;width:60px;"></div></div>
+      <div class="stat-card"><div class="stat-label">Contact Inquiries</div><div class="stat-value skeleton" style="height:36px;width:60px;"></div></div>
+      <div class="stat-card"><div class="stat-label">Total Deposits</div><div class="stat-value skeleton" style="height:36px;width:140px;"></div></div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Recent Clients</div>
+        <button class="btn" onclick="showPage('clients')">View All</button>
+      </div>
+      <div id="overview-users-table"></div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Recent Inquiries</div>
+        <button class="btn" onclick="showPage('contacts')">View All</button>
+      </div>
+      <div id="overview-contacts-table"></div>
+    </div>
+  </div>
+
+  <!-- ── CLIENTS PAGE ── -->
+  <div class="page" id="page-clients">
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Management</div>
+        <h1 class="page-title">Clients</h1>
+      </div>
+      <button class="btn-primary" onclick="openCreateModal()">+ New Client</button>
+    </div>
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">All Users</div>
+        <span id="client-count" style="font-size:12px;color:var(--muted);">— accounts</span>
+      </div>
+      <div id="clients-table"></div>
+    </div>
+  </div>
+
+  <!-- ── USER DETAIL PAGE ── -->
+  <div class="page" id="page-user-detail">
+    <button class="detail-back" onclick="showPage('clients')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Back to Clients
+    </button>
+    <div class="page-header" style="margin-top:0;">
+      <div>
+        <div class="page-eyebrow">Client Detail</div>
+        <h1 class="page-title" id="detail-name">—</h1>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;color:var(--muted)" id="detail-email">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="detail-since">—</div>
+      </div>
+    </div>
+
+    <div class="detail-grid" id="detail-stat-cards"></div>
+
+    <div class="table-card">
+      <div class="table-header"><div class="table-title">Holdings</div></div>
+      <div id="detail-holdings-table"></div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header"><div class="table-title">Recent Transactions</div></div>
+      <div id="detail-tx-table"></div>
+    </div>
+  </div>
+
+  <!-- ── CONTACTS PAGE ── -->
+  <div class="page" id="page-contacts">
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Leads</div>
+        <h1 class="page-title">Contact Inquiries</h1>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Submissions</div>
+        <span id="contact-count" style="font-size:12px;color:var(--muted);">—</span>
+      </div>
+      <div id="contacts-table"></div>
+    </div>
+  </div>
+
+  <!-- ── DEPOSITS PAGE ── -->
+  <div class="page" id="page-deposits">
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Payments</div>
+        <h1 class="page-title">Deposit History</h1>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-header"><div class="table-title">Stripe Payments</div></div>
+      <div id="deposits-table"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── CREATE USER MODAL ── -->
+<div class="modal-overlay" id="create-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCreateModal()">×</button>
+    <div class="modal-title">New Client Account</div>
+    <div class="modal-error" id="create-error"></div>
+    <form id="create-form">
+      <div class="field">
+        <label for="c-name">Full Name</label>
+        <input id="c-name" type="text" placeholder="Jane Smith" required />
+      </div>
+      <div class="field">
+        <label for="c-email">Email Address</label>
+        <input id="c-email" type="email" placeholder="jane@example.com" required />
+      </div>
+      <div class="field">
+        <label for="c-password">Temporary Password</label>
+        <input id="c-password" type="text" placeholder="Set a temporary password" required />
+      </div>
+      <div class="field">
+        <label for="c-role">Role</label>
+        <select id="c-role">
+          <option value="client">Client</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="button" class="btn" style="flex:1;" onclick="closeCreateModal()">Cancel</button>
+        <button type="submit" class="btn-primary" style="flex:2;" id="create-submit">Create Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast">
+  <div class="toast-icon ok" id="toast-icon">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  </div>
+  <div>
+    <div class="toast-title" id="toast-title">Done</div>
+    <div class="toast-body"  id="toast-body"></div>
+  </div>
+  <button class="toast-close" onclick="hideToast()">×</button>
+</div>
+
+<script>
+  const API = '/api/admin';
+  const token = localStorage.getItem('aurora_token');
+  const user  = JSON.parse(localStorage.getItem('aurora_user') || 'null');
+
+  // ── Auth + role guard ──
+  if (!token || !user) { window.location.href = '/login.html'; }
+  if (user && user.role !== 'admin') { window.location.href = '/dashboard.html'; }
+
+  // ── Helpers ──
+  function authFetch(url, opts = {}) {
+    return fetch(url, {
+      ...opts,
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    }).then(async r => {
+      if (r.status === 401) { logout(); throw new Error('Session expired'); }
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    });
+  }
+  function fmt(n)  { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n); }
+  function fmtN(n) { return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(n); }
+  function fmtPct(n) { return (n >= 0 ? '+' : '') + parseFloat(n).toFixed(2) + '%'; }
+  function clr(n)  { return n >= 0 ? 'color:var(--green)' : 'color:var(--red)'; }
+  function fmtDate(d) { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+  function fmtDateTime(d) { return new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+
+  function logout() {
+    localStorage.removeItem('aurora_token');
+    localStorage.removeItem('aurora_user');
+    window.location.href = '/login.html';
+  }
+
+  // ── Init user ──
+  function initUser() {
+    if (!user) return;
+    document.getElementById('user-name').textContent = user.name;
+    const initials = user.name.split(' ').map(w => w[0]).slice(0, 2).join('');
+    document.getElementById('user-avatar').textContent = initials;
+  }
+
+  // ── Nav ──
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    const navItem = document.querySelector(`.nav-item[data-page="${name}"]`);
+    if (navItem) navItem.classList.add('active');
+    document.getElementById('sidebar').classList.remove('open');
+  }
+  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+    item.addEventListener('click', () => {
+      showPage(item.dataset.page);
+      loadPageData(item.dataset.page);
+    });
+  });
+  document.getElementById('burger').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+
+  // ── Load page data on nav ──
+  function loadPageData(page) {
+    if (page === 'clients')  loadClients();
+    if (page === 'contacts') loadContacts();
+    if (page === 'deposits') loadDeposits();
+  }
+
+  // ── Toast ──
+  function showToast(title, body, isError = false) {
+    document.getElementById('toast-title').textContent = title;
+    document.getElementById('toast-body').textContent  = body;
+    const icon = document.getElementById('toast-icon');
+    icon.className = isError ? 'toast-icon err' : 'toast-icon ok';
+    icon.innerHTML = isError
+      ? `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>`
+      : `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    const el = document.getElementById('toast');
+    el.classList.add('show');
+    setTimeout(hideToast, 6000);
+  }
+  function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+  // ── Overview ──
+  async function loadOverview() {
+    try {
+      const [stats, users, contacts] = await Promise.all([
+        authFetch(`${API}/stats`),
+        authFetch(`${API}/users`),
+        authFetch(`${API}/contacts`),
+      ]);
+
+      document.getElementById('stat-cards').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Total AUM</div>
+          <div class="stat-value">${fmt(stats.total_aum)}</div>
+          <div class="stat-sub">Across ${stats.client_count} client${stats.client_count !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Clients</div>
+          <div class="stat-value">${stats.client_count}</div>
+          <div class="stat-sub">Registered accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Contact Inquiries</div>
+          <div class="stat-value">${stats.contact_count}</div>
+          <div class="stat-sub">Form submissions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Deposits</div>
+          <div class="stat-value">${fmt(stats.total_deposits)}</div>
+          <div class="stat-sub">Via Stripe (succeeded)</div>
+        </div>
+      `;
+
+      renderUsersTable('overview-users-table', users.slice(0, 5));
+      renderContactsTable('overview-contacts-table', contacts.slice(0, 5));
+    } catch (err) {
+      showToast('Load Error', err.message, true);
+    }
+  }
+
+  // ── Clients ──
+  async function loadClients() {
+    try {
+      const users = await authFetch(`${API}/users`);
+      document.getElementById('client-count').textContent = `${users.length} account${users.length !== 1 ? 's' : ''}`;
+      renderUsersTable('clients-table', users, true);
+    } catch (err) {
+      showToast('Load Error', err.message, true);
+    }
+  }
+
+  function renderUsersTable(targetId, users, showActions = false) {
+    if (!users.length) {
+      document.getElementById(targetId).innerHTML = `<div class="empty-state">No accounts found.</div>`;
+      return;
+    }
+    const rows = users.map(u => `
+      <tr>
+        <td>
+          <div style="font-weight:600;">${u.name}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${u.email}</div>
+        </td>
+        <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+        <td>${u.total_value != null ? fmt(u.total_value) : '<span style="color:var(--muted)">No portfolio</span>'}</td>
+        <td>${fmtDate(u.created_at)}</td>
+        ${showActions ? `
+        <td>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn-view" onclick="loadUserDetail(${u.id})">View</button>
+            ${u.role !== 'admin' ? `<button class="btn-danger" onclick="deleteUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')">Delete</button>` : ''}
+          </div>
+        </td>` : '<td></td>'}
+      </tr>
+    `).join('');
+    document.getElementById(targetId).innerHTML = `
+      <table>
+        <thead><tr><th>Client</th><th>Role</th><th>Portfolio Value</th><th>Joined</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // ── User detail ──
+  async function loadUserDetail(uid) {
+    showPage('user-detail');
+    document.getElementById('detail-stat-cards').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Portfolio Value</div><div class="stat-value skeleton" style="height:30px;width:130px;"></div></div>
+      <div class="stat-card"><div class="stat-label">Day Change</div><div class="stat-value skeleton" style="height:30px;width:100px;"></div></div>
+      <div class="stat-card"><div class="stat-label">Cash Balance</div><div class="stat-value skeleton" style="height:30px;width:110px;"></div></div>
+    `;
+    try {
+      const { user, portfolio, holdings, transactions } = await authFetch(`${API}/users/${uid}`);
+      document.getElementById('detail-name').textContent  = user.name;
+      document.getElementById('detail-email').textContent = user.email;
+      document.getElementById('detail-since').textContent = `Client since ${fmtDate(user.created_at)}`;
+
+      if (portfolio) {
+        document.getElementById('detail-stat-cards').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-label">Portfolio Value</div>
+            <div class="stat-value">${fmt(portfolio.total_value)}</div>
+            <div class="stat-sub">YTD: <span style="${clr(portfolio.ytd_return)}">${fmt(portfolio.ytd_return)} (${fmtPct(portfolio.ytd_return_pct)})</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Day Change</div>
+            <div class="stat-value" style="${clr(portfolio.day_change)}">${fmt(portfolio.day_change)}</div>
+            <div class="stat-sub" style="${clr(portfolio.day_change_pct)}">${fmtPct(portfolio.day_change_pct)}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Cash Balance</div>
+            <div class="stat-value">${fmt(portfolio.cash_balance)}</div>
+            <div class="stat-sub">${((portfolio.cash_balance / portfolio.total_value) * 100).toFixed(1)}% of portfolio</div>
+          </div>
+        `;
+      } else {
+        document.getElementById('detail-stat-cards').innerHTML = `<div class="empty-state" style="grid-column:1/-1;">No portfolio data.</div>`;
+      }
+
+      // Holdings table
+      if (holdings.length) {
+        const badgeClass = { Equity: 'badge-equity', 'Fixed Income': 'badge-fixed', Alternative: 'badge-alt' };
+        document.getElementById('detail-holdings-table').innerHTML = `
+          <table>
+            <thead><tr><th>Symbol</th><th>Class</th><th>Shares</th><th>Price</th><th>Market Value</th><th>Total Gain</th></tr></thead>
+            <tbody>${holdings.map(h => `
+              <tr>
+                <td><span style="background:rgba(201,168,76,0.12);color:var(--gold);padding:2px 8px;font-size:11px;font-weight:700;margin-right:8px;">${h.symbol}</span>${h.name}</td>
+                <td>${h.asset_class}</td>
+                <td>${fmtN(h.shares)}</td>
+                <td>${fmt(h.price)}</td>
+                <td>${fmt(h.market_value)}</td>
+                <td style="${clr(h.total_gain)}">${fmt(h.total_gain)} (${fmtPct(h.total_gain_pct)})</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } else {
+        document.getElementById('detail-holdings-table').innerHTML = `<div class="empty-state">No holdings.</div>`;
+      }
+
+      // Transactions
+      if (transactions.length) {
+        const typeClass = { BUY: 'tx-buy', SELL: 'tx-sell', DIVIDEND: 'tx-dividend', DEPOSIT: 'tx-deposit' };
+        document.getElementById('detail-tx-table').innerHTML = `
+          <table>
+            <thead><tr><th>Type</th><th>Description</th><th>Amount</th><th>Date</th></tr></thead>
+            <tbody>${transactions.map(t => `
+              <tr>
+                <td><span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;" class="${typeClass[t.type] || 'tx-deposit'}">${t.type}</span></td>
+                <td>${t.symbol ? `<span style="background:rgba(201,168,76,0.12);color:var(--gold);padding:2px 8px;font-size:11px;font-weight:700;margin-right:8px;">${t.symbol}</span>${t.name}` : (t.note || t.type)}</td>
+                <td>${fmt(t.amount)}</td>
+                <td>${fmtDate(t.created_at)}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } else {
+        document.getElementById('detail-tx-table').innerHTML = `<div class="empty-state">No transactions.</div>`;
+      }
+    } catch (err) {
+      showToast('Load Error', err.message, true);
+    }
+  }
+
+  // ── Delete user ──
+  async function deleteUser(uid, name) {
+    if (!confirm(`Delete client "${name}"? This will permanently remove all their portfolio data.`)) return;
+    try {
+      await authFetch(`${API}/users/${uid}`, { method: 'DELETE' });
+      showToast('Client Deleted', `${name} and all associated data have been removed.`);
+      loadClients();
+    } catch (err) {
+      showToast('Delete Failed', err.message, true);
+    }
+  }
+
+  // ── Create user modal ──
+  function openCreateModal() {
+    document.getElementById('create-form').reset();
+    document.getElementById('create-error').classList.remove('show');
+    document.getElementById('create-modal').classList.add('show');
+  }
+  function closeCreateModal() {
+    document.getElementById('create-modal').classList.remove('show');
+  }
+  document.getElementById('create-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('create-modal')) closeCreateModal();
+  });
+  document.getElementById('create-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('create-submit');
+    const err = document.getElementById('create-error');
+    err.classList.remove('show');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+    try {
+      const created = await authFetch(`${API}/users`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name:     document.getElementById('c-name').value.trim(),
+          email:    document.getElementById('c-email').value.trim(),
+          password: document.getElementById('c-password').value,
+          role:     document.getElementById('c-role').value,
+        }),
+      });
+      closeCreateModal();
+      showToast('Account Created', `${created.name} (${created.email}) has been added.`);
+      loadClients();
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    }
+  });
+
+  // ── Contacts ──
+  async function loadContacts() {
+    try {
+      const contacts = await authFetch(`${API}/contacts`);
+      document.getElementById('contact-count').textContent = `${contacts.length} submission${contacts.length !== 1 ? 's' : ''}`;
+      renderContactsTable('contacts-table', contacts);
+    } catch (err) {
+      showToast('Load Error', err.message, true);
+    }
+  }
+
+  function renderContactsTable(targetId, contacts) {
+    if (!contacts.length) {
+      document.getElementById(targetId).innerHTML = `<div class="empty-state">No contact submissions yet.</div>`;
+      return;
+    }
+    document.getElementById(targetId).innerHTML = `
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Service</th><th>Assets</th><th>Date</th></tr></thead>
+        <tbody>${contacts.map(c => `
+          <tr>
+            <td>${c.first_name} ${c.last_name}</td>
+            <td style="color:var(--muted2);">${c.email}${c.phone ? `<br><span style="font-size:11px;color:var(--muted);">${c.phone}</span>` : ''}</td>
+            <td>${c.service || '<span style="color:var(--muted)">—</span>'}</td>
+            <td>${c.assets  || '<span style="color:var(--muted)">—</span>'}</td>
+            <td style="color:var(--muted);font-size:12px;">${fmtDate(c.created_at)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // ── Deposits ──
+  async function loadDeposits() {
+    try {
+      const deposits = await authFetch(`${API}/deposits`);
+      if (!deposits.length) {
+        document.getElementById('deposits-table').innerHTML = `<div class="empty-state">No deposits recorded.</div>`;
+        return;
+      }
+      document.getElementById('deposits-table').innerHTML = `
+        <table>
+          <thead><tr><th>Client</th><th>Amount</th><th>Status</th><th>Payment Intent</th><th>Date</th></tr></thead>
+          <tbody>${deposits.map(d => `
+            <tr>
+              <td>
+                <div style="font-weight:600;">${d.name}</div>
+                <div style="font-size:11px;color:var(--muted);">${d.email}</div>
+              </td>
+              <td>${fmt(d.amount)}</td>
+              <td><span class="status-badge status-${d.status}">${d.status}</span></td>
+              <td style="font-size:11px;color:var(--muted);font-family:monospace;">${d.stripe_payment_intent_id.slice(0, 24)}…</td>
+              <td style="color:var(--muted);font-size:12px;">${fmtDateTime(d.created_at)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+    } catch (err) {
+      showToast('Load Error', err.message, true);
+    }
+  }
+
+  // ── Boot ──
+  initUser();
+  loadOverview();
+</script>
+</body>
+</html>
