@@ -118,6 +118,18 @@ router.get('/documents', async (req, res) => {
   }
 });
 
+// GET /api/portal/fee-info — client sees their fee rate and last charge date
+router.get('/fee-info', async (req, res) => {
+  try {
+    const { rows: [p] } = await db.query(
+      'SELECT fee_rate, last_fee_charged_at FROM portfolios WHERE user_id = $1', [req.user.id]
+    );
+    res.json(p || { fee_rate: 0.015, last_fee_charged_at: null });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /api/portal/withdraw — client requests a withdrawal
 router.post('/withdraw', async (req, res) => {
   const userId = req.user.id;

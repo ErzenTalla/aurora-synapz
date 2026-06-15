@@ -117,7 +117,9 @@ async function setup() {
 
   // Add units_owned to portfolios (migration — safe to run multiple times)
   await pool.query(`
-    ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS units_owned NUMERIC NOT NULL DEFAULT 0;
+    ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS units_owned          NUMERIC     NOT NULL DEFAULT 0;
+    ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS fee_rate             NUMERIC     NOT NULL DEFAULT 0.015;
+    ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS last_fee_charged_at  TIMESTAMPTZ;
   `);
 
   // Withdrawal requests table

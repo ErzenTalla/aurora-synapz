@@ -341,6 +341,10 @@
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19.5v-15m0 15l-6.75-6.75M12 19.5l6.75-6.75"/></svg>
       Withdrawals
     </div>
+    <div class="nav-item" data-page="fees">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Fee Management
+    </div>
     <div class="nav-section-label" style="margin-top:8px;">Portal</div>
     <a href="/dashboard.html" class="nav-item" style="text-decoration:none;">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776"/></svg>
@@ -473,6 +477,38 @@
     <div class="table-card">
       <div class="table-header"><div class="table-title">Stripe Payments</div></div>
       <div id="deposits-table"></div>
+    </div>
+  </div>
+
+  <!-- ── FEE MANAGEMENT PAGE ── -->
+  <div class="page" id="page-fees">
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Revenue</div>
+        <h1 class="page-title">Fee Management</h1>
+      </div>
+      <button class="btn-primary" onclick="collectFeesNow()">Collect Fees Now</button>
+    </div>
+
+    <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);padding:16px 20px;margin-bottom:24px;font-size:12px;color:var(--muted2);line-height:1.7;">
+      Fees are collected automatically on the <strong style="color:var(--cream)">1st of each month</strong>. The monthly charge = annual rate ÷ 12, deducted from each client's portfolio. You can also collect manually at any time.<br/>
+      Default rate: <strong style="color:var(--gold)">1.5% per year</strong> — set custom rates per client below.
+    </div>
+
+    <div class="table-card" style="margin-bottom:24px;">
+      <div class="table-header">
+        <div class="table-title">Upcoming Fee Preview</div>
+        <button class="btn" onclick="loadFeePreview()">Refresh</button>
+      </div>
+      <div id="fee-preview-table"><div class="empty-state">Loading preview…</div></div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Client Fee Rates</div>
+        <span style="font-size:12px;color:var(--muted);">Click a rate to edit</span>
+      </div>
+      <div id="fee-rates-table"><div class="empty-state">Loading…</div></div>
     </div>
   </div>
 
@@ -638,6 +674,7 @@
     if (page === 'contacts')    loadContacts();
     if (page === 'deposits')    loadDeposits();
     if (page === 'withdrawals') loadWithdrawals();
+    if (page === 'fees')        loadFees();
   }
 
   // ── Toast ──
@@ -925,6 +962,101 @@
         </table>`;
     } catch (err) {
       showToast('Load Error', err.message, true);
+    }
+  }
+
+  // ── Fee Management ──
+  async function loadFees() {
+    await loadFeePreview();
+    await loadFeeRates();
+  }
+
+  async function loadFeePreview() {
+    document.getElementById('fee-preview-table').innerHTML = `<div class="empty-state">Loading…</div>`;
+    try {
+      const { clients, collected } = await authFetch(`${API}/fee/preview`);
+      if (!clients.length) {
+        document.getElementById('fee-preview-table').innerHTML = `<div class="empty-state">No clients with active portfolios.</div>`;
+        return;
+      }
+      document.getElementById('fee-preview-table').innerHTML = `
+        <table>
+          <thead><tr><th>Client</th><th>Portfolio Value</th><th>Annual Rate</th><th>Monthly Fee</th></tr></thead>
+          <tbody>
+            ${clients.map(c => `
+              <tr>
+                <td><div style="font-weight:600;">${c.name}</div><div style="font-size:11px;color:var(--muted);">${c.email}</div></td>
+                <td>${fmt(c.totalValue)}</td>
+                <td style="color:var(--gold);">${(c.feeRate * 100).toFixed(2)}%</td>
+                <td style="font-weight:600;color:var(--cream);">${fmt(c.feeAmount)}</td>
+              </tr>`).join('')}
+            <tr style="border-top:1px solid rgba(201,168,76,0.2);">
+              <td colspan="3" style="text-align:right;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);">Total This Month</td>
+              <td style="font-weight:700;color:var(--gold);font-family:var(--serif);font-size:18px;">${fmt(collected || clients.reduce((s,c)=>s+c.feeAmount,0))}</td>
+            </tr>
+          </tbody>
+        </table>`;
+    } catch (err) {
+      showToast('Error', err.message, true);
+    }
+  }
+
+  async function loadFeeRates() {
+    try {
+      const users = await authFetch(`${API}/users`);
+      const clients = users.filter(u => u.role === 'client' && u.total_value != null);
+      if (!clients.length) {
+        document.getElementById('fee-rates-table').innerHTML = `<div class="empty-state">No clients found.</div>`;
+        return;
+      }
+      document.getElementById('fee-rates-table').innerHTML = `
+        <table>
+          <thead><tr><th>Client</th><th>Portfolio Value</th><th>Annual Fee Rate</th><th>Last Charged</th><th></th></tr></thead>
+          <tbody>${clients.map(u => `
+            <tr id="fee-row-${u.id}">
+              <td><div style="font-weight:600;">${u.name}</div><div style="font-size:11px;color:var(--muted);">${u.email}</div></td>
+              <td>${fmt(u.total_value)}</td>
+              <td>
+                <span id="fee-rate-display-${u.id}" style="color:var(--gold);font-weight:600;">${((u.fee_rate || 0.015)*100).toFixed(2)}%</span>
+              </td>
+              <td style="color:var(--muted);font-size:12px;">${u.last_fee_charged_at ? fmtDate(u.last_fee_charged_at) : 'Never'}</td>
+              <td>
+                <button class="btn-view" onclick="editFeeRate(${u.id}, ${u.fee_rate || 0.015})">Edit Rate</button>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+    } catch (err) {
+      showToast('Error', err.message, true);
+    }
+  }
+
+  async function editFeeRate(uid, currentRate) {
+    const input = prompt(`Set annual management fee rate for client (e.g. 1.5 for 1.5%):\nCurrent: ${(currentRate*100).toFixed(2)}%`);
+    if (input === null) return;
+    const pct = parseFloat(input);
+    if (isNaN(pct) || pct < 0 || pct > 10) { alert('Enter a value between 0 and 10 (percent).'); return; }
+    try {
+      await authFetch(`${API}/users/${uid}/fee-rate`, {
+        method: 'PATCH',
+        body: JSON.stringify({ fee_rate: pct / 100 }),
+      });
+      showToast('Fee Rate Updated', `Rate set to ${pct.toFixed(2)}% per year.`);
+      document.getElementById(`fee-rate-display-${uid}`).textContent = `${pct.toFixed(2)}%`;
+      loadFeePreview();
+    } catch (err) {
+      showToast('Error', err.message, true);
+    }
+  }
+
+  async function collectFeesNow() {
+    if (!confirm('Collect monthly management fees from all clients now? This will immediately reduce their portfolio values.')) return;
+    try {
+      const result = await authFetch(`${API}/fee/collect`, { method: 'POST' });
+      showToast('Fees Collected', `${fmt(result.collected)} collected from ${result.clients.length} client${result.clients.length !== 1 ? 's' : ''}.`);
+      loadFees();
+    } catch (err) {
+      showToast('Error', err.message, true);
     }
   }
 

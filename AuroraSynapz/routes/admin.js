@@ -2,6 +2,7 @@ const express      = require('express');
 const bcrypt       = require('bcryptjs');
 const requireAdmin = require('../middleware/requireAdmin');
 const db           = require('../db/index');
+const alpaca       = require('../services/alpaca');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -33,7 +34,8 @@ router.get('/users', async (req, res) => {
   try {
     const { rows } = await db.query(`
       SELECT u.id, u.name, u.email, u.role, u.created_at,
-             p.total_value, p.day_change_pct, p.updated_at AS last_sync
+             p.total_value, p.day_change_pct, p.updated_at AS last_sync,
+             p.fee_rate, p.last_fee_charged_at
       FROM users u
       LEFT JOIN portfolios p ON p.user_id = u.id
       ORDER BY u.created_at DESC
@@ -161,6 +163,114 @@ router.get('/deposits', async (req, res) => {
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Fee management ──────────────────────────────────────────────
+
+// Core fee collection logic — runs per client, redeems units at current price
+async function collectFees(dryRun = false) {
+  const { rows: [fund] } = await db.query('SELECT * FROM fund WHERE id = 1');
+  const unitPrice  = parseFloat(fund.unit_price);
+  const totalUnits = parseFloat(fund.total_units);
+  if (totalUnits <= 0) return { collected: 0, clients: [] };
+
+  const { rows: clients } = await db.query(
+    `SELECT p.*, u.name, u.email FROM portfolios p JOIN users u ON u.id = p.user_id
+     WHERE p.units_owned > 0 AND u.role = 'client'`
+  );
+
+  const results = [];
+  let totalFeeCollected = 0;
+
+  for (const client of clients) {
+    const totalValue  = parseFloat(client.total_value);
+    const feeRate     = parseFloat(client.fee_rate);     // annual rate e.g. 0.015
+    const monthlyRate = feeRate / 12;
+    const feeAmount   = totalValue * monthlyRate;
+    if (feeAmount < 0.01) continue;
+
+    const feeUnits    = feeAmount / unitPrice;
+    results.push({ userId: client.user_id, name: client.name, email: client.email, feeAmount, feeRate, totalValue });
+
+    if (!dryRun) {
+      const cashDeduct = Math.min(feeAmount, parseFloat(client.cash_balance));
+      await db.query(
+        `UPDATE portfolios SET
+           units_owned         = units_owned         - $1,
+           total_value         = total_value         - $2,
+           cash_balance        = cash_balance        - $3,
+           last_fee_charged_at = NOW(),
+           updated_at          = NOW()
+         WHERE user_id = $4`,
+        [feeUnits, feeAmount, cashDeduct, client.user_id]
+      );
+      await db.query(
+        `INSERT INTO transactions (user_id, type, amount, note) VALUES ($1, 'FEE', $2, $3)`,
+        [client.user_id, feeAmount, `Monthly management fee (${(feeRate * 100).toFixed(2)}% p.a.)`]
+      );
+      totalFeeCollected += feeAmount;
+    }
+  }
+
+  if (!dryRun && totalFeeCollected > 0) {
+    const totalFeeUnits = totalFeeCollected / unitPrice;
+    await db.query(
+      `UPDATE fund SET total_value = total_value - $1, total_units = total_units - $2, updated_at = NOW() WHERE id = 1`,
+      [totalFeeCollected, totalFeeUnits]
+    );
+  }
+
+  return { collected: totalFeeCollected, clients: results };
+}
+
+// GET /api/admin/fee/preview — show upcoming fees without collecting
+router.get('/fee/preview', async (req, res) => {
+  try {
+    const result = await collectFees(true);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/fee/collect — manually collect fees now
+router.post('/fee/collect', async (req, res) => {
+  try {
+    const result = await collectFees(false);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/fee/cron-collect — monthly cron (no user auth, optional CRON_SECRET)
+router.get('/fee/cron-collect', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET || '';
+  if (cronSecret) {
+    const auth = req.headers.authorization || '';
+    if (auth !== `Bearer ${cronSecret}`) return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const result = await collectFees(false);
+    res.json({ success: true, ...result, collected_at: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/admin/users/:id/fee-rate — set a custom fee rate for a client
+router.patch('/users/:id/fee-rate', async (req, res) => {
+  const uid     = parseInt(req.params.id);
+  const feeRate = parseFloat(req.body.fee_rate);
+  if (isNaN(feeRate) || feeRate < 0 || feeRate > 0.10) {
+    return res.status(400).json({ error: 'Fee rate must be between 0% and 10%' });
+  }
+  try {
+    await db.query('UPDATE portfolios SET fee_rate = $1 WHERE user_id = $2', [feeRate, uid]);
+    res.json({ success: true, user_id: uid, fee_rate: feeRate });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

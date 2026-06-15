@@ -260,6 +260,7 @@
     .tx-dividend { background: rgba(201,168,76,0.15); color: var(--gold); }
     .tx-deposit  { background: rgba(100,140,220,0.15);color: #8ab4f8; }
     .tx-withdraw { background: rgba(224,82,82,0.12);  color: #ff9a9a; }
+    .tx-fee      { background: rgba(201,168,76,0.10);  color: rgba(201,168,76,0.7); }
 
     /* ── DOCUMENTS ── */
     .docs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -687,6 +688,16 @@
         <div class="stat-sub neutral">${((data.cash_balance / data.total_value) * 100).toFixed(1)}% of portfolio</div>
       </div>
     `;
+    // Fetch and show fee rate
+    try {
+      const feeData = await authFetch('/api/portal/fee-info');
+      const feeCard = document.querySelector('#stat-cards .stat-card:last-child');
+      if (feeCard && feeData.fee_rate != null) {
+        feeCard.insertAdjacentHTML('beforeend',
+          `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(201,168,76,0.1);font-size:11px;color:var(--muted);">Mgmt fee: <span style="color:var(--cream)">${(feeData.fee_rate * 100).toFixed(2)}% p.a.</span></div>`
+        );
+      }
+    } catch(_) {}
   }
 
   // ── Performance chart ──
@@ -786,16 +797,17 @@
 
   // ── Transaction rows ──
   function txRow(t) {
-    const typeClass = { BUY: 'tx-buy', SELL: 'tx-sell', DIVIDEND: 'tx-dividend', DEPOSIT: 'tx-deposit' }[t.type] || 'tx-deposit';
+    const typeClass = { BUY: 'tx-buy', SELL: 'tx-sell', DIVIDEND: 'tx-dividend', DEPOSIT: 'tx-deposit', WITHDRAW: 'tx-withdraw', FEE: 'tx-fee' }[t.type] || 'tx-deposit';
     const date = new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const desc = t.symbol ? `<span class="symbol-badge">${t.symbol}</span>${t.name}` : (t.note || t.type);
+    const isDebit = ['SELL', 'WITHDRAW', 'FEE'].includes(t.type);
     return `
       <tr>
         <td><span class="tx-type ${typeClass}">${t.type}</span></td>
         <td>${desc}</td>
         <td>${t.shares ? fmtN(t.shares) + ' sh' : '—'}</td>
         <td>${t.price ? fmt(t.price) : '—'}</td>
-        <td class="${t.type === 'SELL' ? 'down' : 'up'}">${t.type === 'SELL' ? '-' : '+'}${fmt(t.amount)}</td>
+        <td class="${isDebit ? 'down' : 'up'}">${isDebit ? '-' : '+'}${fmt(t.amount)}</td>
         <td class="neutral">${date}</td>
       </tr>
     `;
