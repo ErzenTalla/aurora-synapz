@@ -1,0 +1,542 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01C2E80F84881B9D6532EF47 /* AdminClientsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80540DC50AA086BF2762C1EA /* AdminClientsView.swift */; };
+		038C40D72E7383C4EEE6E561 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE86842DAAEEAAFF331D2871 /* ContentView.swift */; };
+		0697399E475937B0AC1AE5BC /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755602D6CEF408FC25BE8F85 /* TransactionsView.swift */; };
+		06F0FC06783AF13051F37364 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583ADC7A0177466DFA840037 /* LoginView.swift */; };
+		13821B3B51C3A5573B402842 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0919DD93C640E7DDB024D989 /* Theme.swift */; };
+		2F6704B910921589CCC98B51 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2A4EE4B622ABA0E97789BA /* APIService.swift */; };
+		33CD7ECB827809A4977BAFCB /* ModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF4076DEB73475164781C1D /* ModelsTests.swift */; };
+		484FCF3144BF4088AD971D06 /* HoldingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226B27B9364927831D308FF1 /* HoldingsView.swift */; };
+		4B39FFB3B3402F20B83DFC11 /* AdminTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C30BA78971CF757B2A9AAB /* AdminTabView.swift */; };
+		53C2E0E989FE37F18BDB6FA3 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB8423FBAB85B5A47816B26 /* AccountView.swift */; };
+		7502C64F960CA8AF8604251B /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8EFCF75A1E0273EDE44B10 /* AuthStore.swift */; };
+		78DB76AF1366B119530D13F3 /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC9D0F59447665C8E067274 /* OverviewView.swift */; };
+		B4457B55F8C0B1324E83CA24 /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68ED394057DCBABAE99117DB /* SharedViews.swift */; };
+		B7F4373910403D80468C50AC /* AdminContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3CE91BE02AD74C6BC89E63 /* AdminContactsView.swift */; };
+		BE594A24CCD14B7A86C782B0 /* AuroraSyanapzApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B062F26BFA16F31F9C929293 /* AuroraSyanapzApp.swift */; };
+		D71841FCB360158D5709325A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 653C5B641AE70C5A2188D78B /* Models.swift */; };
+		D8283FD6C2CC04780B1146A0 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D89E253A521437480B10C52 /* ThemeTests.swift */; };
+		DE93BED4BB581FC853F5B294 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75888DF778CD8BFCCA5C5538 /* Assets.xcassets */; };
+		E29A110A9B97A34935962726 /* AdminOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0F1E25751D5A132222DC1F /* AdminOverviewView.swift */; };
+		EB2065DF0F9F7997EFC6E007 /* ClientTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22981BC56A45AA950BD7853E /* ClientTabView.swift */; };
+		EFE9CDE00739D1C4DA8931BB /* AuthStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E6FC3F90385E5DA08DAC27 /* AuthStoreTests.swift */; };
+		F8A2A899A98426EB9A311B67 /* DocumentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9FAFFC603A56DBA7170DEE /* DocumentsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2C38AF7DAF3FAB3F15241394 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7DA80BA676EB3CB436CA5CD9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E8DC27E1C5F078C94B6B8D78;
+			remoteInfo = AuroraSyanapz;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0919DD93C640E7DDB024D989 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		0E2A4EE4B622ABA0E97789BA /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
+		20C30BA78971CF757B2A9AAB /* AdminTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminTabView.swift; sourceTree = "<group>"; };
+		226B27B9364927831D308FF1 /* HoldingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldingsView.swift; sourceTree = "<group>"; };
+		22981BC56A45AA950BD7853E /* ClientTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientTabView.swift; sourceTree = "<group>"; };
+		2B0F1E25751D5A132222DC1F /* AdminOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminOverviewView.swift; sourceTree = "<group>"; };
+		2EF4076DEB73475164781C1D /* ModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
+		583ADC7A0177466DFA840037 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		5BAD886D0B842C306E6B25DA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		653C5B641AE70C5A2188D78B /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		68ED394057DCBABAE99117DB /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
+		6D9FAFFC603A56DBA7170DEE /* DocumentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentsView.swift; sourceTree = "<group>"; };
+		755602D6CEF408FC25BE8F85 /* TransactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsView.swift; sourceTree = "<group>"; };
+		75888DF778CD8BFCCA5C5538 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		80540DC50AA086BF2762C1EA /* AdminClientsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminClientsView.swift; sourceTree = "<group>"; };
+		8D89E253A521437480B10C52 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
+		AB3CE91BE02AD74C6BC89E63 /* AdminContactsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminContactsView.swift; sourceTree = "<group>"; };
+		AE7682C7F13A37B5D448F5C5 /* AuroraSyanapzTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AuroraSyanapzTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE86842DAAEEAAFF331D2871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B062F26BFA16F31F9C929293 /* AuroraSyanapzApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraSyanapzApp.swift; sourceTree = "<group>"; };
+		E0CAB88A5D1E6B8B920EAF07 /* AuroraSyanapz.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AuroraSyanapz.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EDC9D0F59447665C8E067274 /* OverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewView.swift; sourceTree = "<group>"; };
+		EEB8423FBAB85B5A47816B26 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		F1E6FC3F90385E5DA08DAC27 /* AuthStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStoreTests.swift; sourceTree = "<group>"; };
+		FE8EFCF75A1E0273EDE44B10 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		472B3ABB13AE2B7D389F537F /* AuroraSyanapz */ = {
+			isa = PBXGroup;
+			children = (
+				75888DF778CD8BFCCA5C5538 /* Assets.xcassets */,
+				B062F26BFA16F31F9C929293 /* AuroraSyanapzApp.swift */,
+				5BAD886D0B842C306E6B25DA /* Info.plist */,
+				DB900925E88656A6F971183A /* Models */,
+				6B61BF2C8FA642A874EC4FC8 /* Services */,
+				B8D3479460BD060ED27E9392 /* Utils */,
+				F348333825D2059B753B070E /* Views */,
+			);
+			path = AuroraSyanapz;
+			sourceTree = "<group>";
+		};
+		655A1960A370989B0FB13440 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				68ED394057DCBABAE99117DB /* SharedViews.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		6B61BF2C8FA642A874EC4FC8 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				0E2A4EE4B622ABA0E97789BA /* APIService.swift */,
+				FE8EFCF75A1E0273EDE44B10 /* AuthStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		7CD77F6848D39B4FE72B5508 /* Client */ = {
+			isa = PBXGroup;
+			children = (
+				EEB8423FBAB85B5A47816B26 /* AccountView.swift */,
+				22981BC56A45AA950BD7853E /* ClientTabView.swift */,
+				6D9FAFFC603A56DBA7170DEE /* DocumentsView.swift */,
+				226B27B9364927831D308FF1 /* HoldingsView.swift */,
+				EDC9D0F59447665C8E067274 /* OverviewView.swift */,
+				755602D6CEF408FC25BE8F85 /* TransactionsView.swift */,
+			);
+			path = Client;
+			sourceTree = "<group>";
+		};
+		99F840C3E746CB32433EF144 /* AuroraSyanapzTests */ = {
+			isa = PBXGroup;
+			children = (
+				F1E6FC3F90385E5DA08DAC27 /* AuthStoreTests.swift */,
+				2EF4076DEB73475164781C1D /* ModelsTests.swift */,
+				8D89E253A521437480B10C52 /* ThemeTests.swift */,
+			);
+			path = AuroraSyanapzTests;
+			sourceTree = "<group>";
+		};
+		AD302089DA8B073825B9C697 /* Admin */ = {
+			isa = PBXGroup;
+			children = (
+				80540DC50AA086BF2762C1EA /* AdminClientsView.swift */,
+				AB3CE91BE02AD74C6BC89E63 /* AdminContactsView.swift */,
+				2B0F1E25751D5A132222DC1F /* AdminOverviewView.swift */,
+				20C30BA78971CF757B2A9AAB /* AdminTabView.swift */,
+			);
+			path = Admin;
+			sourceTree = "<group>";
+		};
+		B8D3479460BD060ED27E9392 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				0919DD93C640E7DDB024D989 /* Theme.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		CF116A2F394E4BEA7714624F /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				583ADC7A0177466DFA840037 /* LoginView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		D574D211C61865E7A3AFFF9E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E0CAB88A5D1E6B8B920EAF07 /* AuroraSyanapz.app */,
+				AE7682C7F13A37B5D448F5C5 /* AuroraSyanapzTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DB900925E88656A6F971183A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				653C5B641AE70C5A2188D78B /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E9B4DF2C5B4B6208C800BCA8 = {
+			isa = PBXGroup;
+			children = (
+				472B3ABB13AE2B7D389F537F /* AuroraSyanapz */,
+				99F840C3E746CB32433EF144 /* AuroraSyanapzTests */,
+				D574D211C61865E7A3AFFF9E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F348333825D2059B753B070E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AE86842DAAEEAAFF331D2871 /* ContentView.swift */,
+				AD302089DA8B073825B9C697 /* Admin */,
+				CF116A2F394E4BEA7714624F /* Auth */,
+				7CD77F6848D39B4FE72B5508 /* Client */,
+				655A1960A370989B0FB13440 /* Shared */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8E597F63D7E5FA97AAEF710B /* AuroraSyanapzTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 326FFB6DA438DCEB2092C05E /* Build configuration list for PBXNativeTarget "AuroraSyanapzTests" */;
+			buildPhases = (
+				9EB05B051ABCDD28BBA0C24A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1DB65BBE7FCCFE5A94BC8986 /* PBXTargetDependency */,
+			);
+			name = AuroraSyanapzTests;
+			packageProductDependencies = (
+			);
+			productName = AuroraSyanapzTests;
+			productReference = AE7682C7F13A37B5D448F5C5 /* AuroraSyanapzTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E8DC27E1C5F078C94B6B8D78 /* AuroraSyanapz */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DE8CC1BC6021887B51DDA99 /* Build configuration list for PBXNativeTarget "AuroraSyanapz" */;
+			buildPhases = (
+				74142303E00171963C36342E /* Sources */,
+				7AE0DD3A7BD73EE007E5C9AC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AuroraSyanapz;
+			packageProductDependencies = (
+			);
+			productName = AuroraSyanapz;
+			productReference = E0CAB88A5D1E6B8B920EAF07 /* AuroraSyanapz.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7DA80BA676EB3CB436CA5CD9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = F51AD43EBA27F17821229559 /* Build configuration list for PBXProject "AuroraSyanapz" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E9B4DF2C5B4B6208C800BCA8;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D574D211C61865E7A3AFFF9E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E8DC27E1C5F078C94B6B8D78 /* AuroraSyanapz */,
+				8E597F63D7E5FA97AAEF710B /* AuroraSyanapzTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7AE0DD3A7BD73EE007E5C9AC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE93BED4BB581FC853F5B294 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		74142303E00171963C36342E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F6704B910921589CCC98B51 /* APIService.swift in Sources */,
+				53C2E0E989FE37F18BDB6FA3 /* AccountView.swift in Sources */,
+				01C2E80F84881B9D6532EF47 /* AdminClientsView.swift in Sources */,
+				B7F4373910403D80468C50AC /* AdminContactsView.swift in Sources */,
+				E29A110A9B97A34935962726 /* AdminOverviewView.swift in Sources */,
+				4B39FFB3B3402F20B83DFC11 /* AdminTabView.swift in Sources */,
+				BE594A24CCD14B7A86C782B0 /* AuroraSyanapzApp.swift in Sources */,
+				7502C64F960CA8AF8604251B /* AuthStore.swift in Sources */,
+				EB2065DF0F9F7997EFC6E007 /* ClientTabView.swift in Sources */,
+				038C40D72E7383C4EEE6E561 /* ContentView.swift in Sources */,
+				F8A2A899A98426EB9A311B67 /* DocumentsView.swift in Sources */,
+				484FCF3144BF4088AD971D06 /* HoldingsView.swift in Sources */,
+				06F0FC06783AF13051F37364 /* LoginView.swift in Sources */,
+				D71841FCB360158D5709325A /* Models.swift in Sources */,
+				78DB76AF1366B119530D13F3 /* OverviewView.swift in Sources */,
+				B4457B55F8C0B1324E83CA24 /* SharedViews.swift in Sources */,
+				13821B3B51C3A5573B402842 /* Theme.swift in Sources */,
+				0697399E475937B0AC1AE5BC /* TransactionsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9EB05B051ABCDD28BBA0C24A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EFE9CDE00739D1C4DA8931BB /* AuthStoreTests.swift in Sources */,
+				33CD7ECB827809A4977BAFCB /* ModelsTests.swift in Sources */,
+				D8283FD6C2CC04780B1146A0 /* ThemeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1DB65BBE7FCCFE5A94BC8986 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E8DC27E1C5F078C94B6B8D78 /* AuroraSyanapz */;
+			targetProxy = 2C38AF7DAF3FAB3F15241394 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0C0B4EA5B4EBCF838C703D02 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		3CE84F422C604AABB43FBBDA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = AuroraSyanapz/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aurorasyanapz.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		66DE3AF6BD9A4DBC7D8D5CF9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aurorasyanapz.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AuroraSyanapz.app/AuroraSyanapz";
+			};
+			name = Release;
+		};
+		8A0CC0B928E71453515E8EEB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = AuroraSyanapz/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aurorasyanapz.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4C8733BE5CB8E84A5E20364 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		DA93503F1455D14948A525F4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aurorasyanapz.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AuroraSyanapz.app/AuroraSyanapz";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DE8CC1BC6021887B51DDA99 /* Build configuration list for PBXNativeTarget "AuroraSyanapz" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A0CC0B928E71453515E8EEB /* Debug */,
+				3CE84F422C604AABB43FBBDA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		326FFB6DA438DCEB2092C05E /* Build configuration list for PBXNativeTarget "AuroraSyanapzTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA93503F1455D14948A525F4 /* Debug */,
+				66DE3AF6BD9A4DBC7D8D5CF9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F51AD43EBA27F17821229559 /* Build configuration list for PBXProject "AuroraSyanapz" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0C0B4EA5B4EBCF838C703D02 /* Debug */,
+				D4C8733BE5CB8E84A5E20364 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7DA80BA676EB3CB436CA5CD9 /* Project object */;
+}
