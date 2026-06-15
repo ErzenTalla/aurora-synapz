@@ -120,6 +120,21 @@ async function setup() {
     ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS units_owned NUMERIC NOT NULL DEFAULT 0;
   `);
 
+  // Withdrawal requests table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS withdrawal_requests (
+      id             SERIAL PRIMARY KEY,
+      user_id        INTEGER     NOT NULL REFERENCES users(id),
+      amount         NUMERIC     NOT NULL,
+      units_redeemed NUMERIC     NOT NULL,
+      unit_price     NUMERIC     NOT NULL,
+      status         TEXT        NOT NULL DEFAULT 'pending',
+      notes          TEXT,
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      processed_at   TIMESTAMPTZ
+    );
+  `);
+
   // One-time migration: seed fund and units from existing portfolio data
   // Only runs if fund has no units but portfolios already have value
   await pool.query(`

@@ -164,4 +164,70 @@ router.get('/deposits', async (req, res) => {
   }
 });
 
+// ── Withdrawal requests ──────────────────────────────────────────
+router.get('/withdrawals', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT wr.*, u.name, u.email
+      FROM withdrawal_requests wr
+      JOIN users u ON u.id = wr.user_id
+      ORDER BY wr.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/withdrawals/:id/status', async (req, res) => {
+  const id     = parseInt(req.params.id);
+  const status = req.body.status;
+  const notes  = req.body.notes || null;
+
+  if (!['approved', 'processed', 'rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Status must be approved, processed, or rejected' });
+  }
+
+  try {
+    const { rows: [wr] } = await db.query('SELECT * FROM withdrawal_requests WHERE id = $1', [id]);
+    if (!wr) return res.status(404).json({ error: 'Withdrawal not found' });
+    if (wr.status === 'processed') return res.status(400).json({ error: 'Already processed' });
+
+    // Rejecting: restore client units and fund balance
+    if (status === 'rejected' && wr.status === 'pending') {
+      const unitPrice = parseFloat(wr.unit_price);
+      const amount    = parseFloat(wr.amount);
+      const units     = parseFloat(wr.units_redeemed);
+
+      await db.query(
+        `UPDATE portfolios SET
+           units_owned  = units_owned  + $1,
+           total_value  = total_value  + $2,
+           cash_balance = cash_balance + $2,
+           updated_at   = NOW()
+         WHERE user_id = $3`,
+        [units, amount, wr.user_id]
+      );
+      await db.query(
+        `UPDATE fund SET total_value = total_value + $1, total_units = total_units + $2, updated_at = NOW() WHERE id = 1`,
+        [amount, units]
+      );
+      await db.query(
+        `INSERT INTO transactions (user_id, type, amount, note) VALUES ($1, 'DEPOSIT', $2, $3)`,
+        [wr.user_id, amount, `Withdrawal #${id} rejected — funds restored`]
+      );
+    }
+
+    await db.query(
+      `UPDATE withdrawal_requests SET status=$1, notes=$2, processed_at=NOW() WHERE id=$3`,
+      [status, notes, id]
+    );
+
+    res.json({ success: true, id, status });
+  } catch (err) {
+    console.error('Update withdrawal error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

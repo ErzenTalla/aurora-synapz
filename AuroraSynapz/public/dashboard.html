@@ -259,6 +259,7 @@
     .tx-sell     { background: rgba(224,82,82,0.15);  color: var(--red); }
     .tx-dividend { background: rgba(201,168,76,0.15); color: var(--gold); }
     .tx-deposit  { background: rgba(100,140,220,0.15);color: #8ab4f8; }
+    .tx-withdraw { background: rgba(224,82,82,0.12);  color: #ff9a9a; }
 
     /* ── DOCUMENTS ── */
     .docs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -395,6 +396,10 @@
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
       Deposit Funds
     </a>
+    <div class="nav-item" data-page="withdraw">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19.5v-15m0 0l-6.75 6.75M12 4.5l6.75 6.75"/></svg>
+      Withdraw Funds
+    </div>
     <a href="/admin.html" class="nav-item" id="admin-link" style="text-decoration:none;display:none;">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
       Admin Panel
@@ -511,6 +516,41 @@
         <div class="table-title">Transaction History</div>
       </div>
       <div id="tx-table"></div>
+    </div>
+  </div>
+
+  <!-- WITHDRAW PAGE -->
+  <div class="page" id="page-withdraw">
+    <div class="page-header">
+      <div>
+        <div class="page-greeting">Request a fund withdrawal</div>
+        <h1 class="page-title">Withdraw Funds</h1>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px;" id="withdraw-cards">
+      <div class="stat-card"><div class="stat-label">Available Balance</div><div class="stat-value skeleton" style="height:36px;width:140px;"></div></div>
+      <div class="stat-card"><div class="stat-label">Minimum Withdrawal</div><div class="stat-value">$100</div><div class="stat-sub neutral">Processing may take 2–5 business days</div></div>
+    </div>
+
+    <div class="table-card" style="max-width:520px;">
+      <div class="table-header"><div class="table-title">New Withdrawal Request</div></div>
+      <div style="padding:28px;">
+        <div id="wd-error" style="background:rgba(220,60,60,0.1);border:1px solid rgba(220,60,60,0.35);color:#ff8080;padding:10px 14px;font-size:12px;margin-bottom:16px;display:none;"></div>
+        <div style="margin-bottom:18px;">
+          <label style="display:block;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Withdrawal Amount (USD)</label>
+          <input id="wd-amount" type="number" min="100" step="1" placeholder="e.g. 500" style="width:100%;background:rgba(21,46,69,0.5);border:1px solid rgba(201,168,76,0.2);color:var(--cream);padding:12px 14px;font-family:var(--sans);font-size:15px;outline:none;" />
+        </div>
+        <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);padding:14px;margin-bottom:20px;font-size:12px;color:var(--muted2);line-height:1.6;">
+          Your request will be reviewed by your advisor. Once approved, funds will be transferred to your registered bank account within 2–5 business days.
+        </div>
+        <button id="wd-submit" onclick="submitWithdrawal()" style="width:100%;background:var(--gold);border:1px solid var(--gold);color:var(--navy);padding:12px;font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;">Request Withdrawal</button>
+      </div>
+    </div>
+
+    <div class="table-card" style="margin-top:24px;">
+      <div class="table-header"><div class="table-title">Withdrawal History</div></div>
+      <div id="wd-history-table"></div>
     </div>
   </div>
 
@@ -961,6 +1001,84 @@
       btn.disabled = false; btn.textContent = 'Update Password';
     }
   });
+
+  // ── Withdraw page ──
+  let _portfolioValue = 0;
+  async function loadWithdrawPage() {
+    const data = await authFetch(`${API}/overview`);
+    _portfolioValue = parseFloat(data.total_value);
+    document.getElementById('withdraw-cards').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">Available Balance</div>
+        <div class="stat-value">${fmt(data.total_value)}</div>
+        <div class="stat-sub neutral">Cash: ${fmt(data.cash_balance)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Minimum Withdrawal</div>
+        <div class="stat-value">$100</div>
+        <div class="stat-sub neutral">Processing 2–5 business days</div>
+      </div>
+    `;
+    loadWithdrawalHistory();
+  }
+
+  async function loadWithdrawalHistory() {
+    const rows = await authFetch(`${API}/withdrawals`);
+    const statusColor = { pending: 'var(--gold)', approved: '#8ab4f8', processed: 'var(--green)', rejected: 'var(--red)' };
+    if (!rows.length) {
+      document.getElementById('wd-history-table').innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px;">No withdrawal requests yet.</div>`;
+      return;
+    }
+    document.getElementById('wd-history-table').innerHTML = `
+      <table>
+        <thead><tr><th>Amount</th><th>Status</th><th>Unit Price</th><th>Notes</th><th>Date</th></tr></thead>
+        <tbody>${rows.map(w => `
+          <tr>
+            <td style="font-weight:600;">${fmt(w.amount)}</td>
+            <td><span style="display:inline-block;padding:2px 10px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${statusColor[w.status] || 'var(--muted)'};">${w.status}</span></td>
+            <td style="color:var(--muted2);">$${parseFloat(w.unit_price).toFixed(4)}</td>
+            <td style="color:var(--muted);font-size:12px;">${w.notes || '—'}</td>
+            <td style="color:var(--muted);font-size:12px;">${new Date(w.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function submitWithdrawal() {
+    const amount = parseFloat(document.getElementById('wd-amount').value);
+    const errEl  = document.getElementById('wd-error');
+    const btn    = document.getElementById('wd-submit');
+    errEl.style.display = 'none';
+
+    if (!amount || isNaN(amount) || amount < 100) {
+      errEl.textContent = 'Minimum withdrawal is $100'; errEl.style.display = 'block'; return;
+    }
+    if (amount > _portfolioValue) {
+      errEl.textContent = `Amount exceeds your available balance of ${fmt(_portfolioValue)}`; errEl.style.display = 'block'; return;
+    }
+    if (!confirm(`Request withdrawal of ${fmt(amount)}? Your portfolio value will be reduced immediately. Funds will be transferred to your bank account after advisor approval.`)) return;
+
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const res  = await fetch(`${API}/withdraw`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      document.getElementById('wd-amount').value = '';
+      showToast('Withdrawal Requested', `${fmt(amount)} request submitted. Your advisor will process it within 2–5 business days.`, 10000);
+      await Promise.all([loadWithdrawPage(), loadOverview(), loadRecentTx()]);
+    } catch (err) {
+      errEl.textContent = err.message; errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Request Withdrawal';
+    }
+  }
+
+  // ── Withdraw page lazy load on nav ──
+  document.querySelector('.nav-item[data-page="withdraw"]').addEventListener('click', loadWithdrawPage);
 
   // ── Boot ──
   initUser();
