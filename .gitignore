@@ -1,10 +1,10 @@
 node_modules/
+alpinetechwebsite-workbench/
 .env
-db/aurora.db
-db/aurora.db-shm
-db/aurora.db-wal
-/index.html
-.claude/
-Aurora Synapz Asset Management LLC/
-.vercel
 .env*
+AuroraSynapz/db/aurora.db
+AuroraSynapz/db/aurora.db-shm
+AuroraSynapz/db/aurora.db-wal
+.claude/
+AuroraSynapz/brand/
+.vercel
