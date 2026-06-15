@@ -18,64 +18,78 @@ function assetClass(symbol) {
   return ASSET_CLASS[symbol] || 'Equity';
 }
 
-// GET /api/alpaca/status
-router.get('/status', requireAuth, async (req, res) => {
-  try {
-    const { rows } = await db.query(
-      'SELECT * FROM alpaca_sync_log WHERE user_id = $1 ORDER BY synced_at DESC LIMIT 1',
-      [req.user.id]
-    );
-    res.json({ configured: alpaca.isConfigured(), last_sync: rows[0] || null });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// ── Core sync logic ──────────────────────────────────────────────
+// Pulls one Alpaca account and redistributes value to ALL clients
+// proportionally based on their units_owned in the fund.
+async function runFundSync() {
+  if (!alpaca.isConfigured()) throw new Error('Alpaca API keys not configured');
 
-// POST /api/alpaca/sync — pull live data from Alpaca and update the DB
-router.post('/sync', requireAuth, async (req, res) => {
-  if (!alpaca.isConfigured()) {
-    return res.status(503).json({ error: 'Alpaca API keys not configured' });
-  }
+  const [account, positions] = await Promise.all([
+    alpaca.getAccount(),
+    alpaca.getPositions(),
+  ]);
 
-  try {
-    const userId = req.user.id;
-    const [account, positions] = await Promise.all([
-      alpaca.getAccount(),
-      alpaca.getPositions(),
-    ]);
+  const totalValue  = parseFloat(account.portfolio_value);
+  const cashBalance = parseFloat(account.cash);
+  const dayChange   = positions.reduce((s, p) => s + parseFloat(p.unrealized_intraday_pl || 0), 0);
 
-    const totalValue  = parseFloat(account.portfolio_value);
-    const cashBalance = parseFloat(account.cash);
-    const dayChange   = positions.reduce((s, p) => s + parseFloat(p.unrealized_intraday_pl || 0), 0);
-    const dayChangePct = totalValue > 0 ? (dayChange / (totalValue - dayChange)) * 100 : 0;
+  // Update fund unit price
+  const { rows: [fund] } = await db.query('SELECT * FROM fund WHERE id = 1');
+  const totalUnits = parseFloat(fund.total_units);
+  const unitPrice  = totalUnits > 0 ? totalValue / totalUnits : 1.0;
 
-    // Recalculate YTD from last performance_history entry at year start vs now
-    const yearStart = `${new Date().getFullYear()}-01-01`;
+  await db.query(
+    `UPDATE fund SET total_value=$1, unit_price=$2, updated_at=NOW() WHERE id=1`,
+    [totalValue, unitPrice]
+  );
+
+  // Replace fund-level holdings with live positions
+  // Holdings are stored per-client proportionally — rebuild for all clients
+  const { rows: clients } = await db.query(
+    `SELECT user_id, units_owned FROM portfolios WHERE units_owned > 0`
+  );
+
+  const today    = new Date().toISOString().split('T')[0];
+  const yearStart = `${new Date().getFullYear()}-01-01`;
+
+  for (const client of clients) {
+    const clientUnits = parseFloat(client.units_owned);
+    const share       = totalUnits > 0 ? clientUnits / totalUnits : 0;
+    const clientValue = clientUnits * unitPrice;
+    const clientCash  = cashBalance * share;
+    const clientDayChange    = dayChange * share;
+    const clientDayChangePct = clientValue > 0 ? (clientDayChange / (clientValue - clientDayChange)) * 100 : 0;
+    const userId = client.user_id;
+
+    // YTD from first performance_history entry at year start
     const { rows: ytdRows } = await db.query(
-      `SELECT value FROM performance_history WHERE user_id = $1 AND date >= $2 ORDER BY date ASC LIMIT 1`,
+      `SELECT value FROM performance_history WHERE user_id=$1 AND date >= $2 ORDER BY date ASC LIMIT 1`,
       [userId, yearStart]
     );
-    const ytdBase   = ytdRows[0] ? parseFloat(ytdRows[0].value) : totalValue;
-    const ytdReturn    = totalValue - ytdBase;
+    const ytdBase      = ytdRows[0] ? parseFloat(ytdRows[0].value) : clientValue;
+    const ytdReturn    = clientValue - ytdBase;
     const ytdReturnPct = ytdBase > 0 ? (ytdReturn / ytdBase) * 100 : 0;
 
-    // Upsert portfolio row
+    // Update portfolio
     await db.query(`
-      INSERT INTO portfolios (user_id, total_value, cash_balance, day_change, day_change_pct, ytd_return, ytd_return_pct, updated_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
-      ON CONFLICT (user_id) DO UPDATE SET
-        total_value    = EXCLUDED.total_value,
-        cash_balance   = EXCLUDED.cash_balance,
-        day_change     = EXCLUDED.day_change,
-        day_change_pct = EXCLUDED.day_change_pct,
-        ytd_return     = EXCLUDED.ytd_return,
-        ytd_return_pct = EXCLUDED.ytd_return_pct,
+      UPDATE portfolios SET
+        total_value    = $1,
+        cash_balance   = $2,
+        day_change     = $3,
+        day_change_pct = $4,
+        ytd_return     = $5,
+        ytd_return_pct = $6,
         updated_at     = NOW()
-    `, [userId, totalValue, cashBalance, dayChange, dayChangePct, ytdReturn, ytdReturnPct]);
+      WHERE user_id = $7
+    `, [clientValue, clientCash, clientDayChange, clientDayChangePct, ytdReturn, ytdReturnPct, userId]);
 
-    // Replace holdings with live positions
+    // Replace holdings with proportional share of each position
     await db.query('DELETE FROM holdings WHERE user_id = $1', [userId]);
     for (const pos of positions) {
+      const posValue     = parseFloat(pos.market_value || 0);
+      const clientShares = parseFloat(pos.qty) * share;
+      const price        = parseFloat(pos.current_price);
+      const avgCost      = parseFloat(pos.avg_entry_price);
       await db.query(`
         INSERT INTO holdings (user_id, symbol, name, asset_class, shares, price, avg_cost, day_change, day_chg_pct)
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -84,36 +98,70 @@ router.post('/sync', requireAuth, async (req, res) => {
         pos.symbol,
         pos.symbol,
         assetClass(pos.symbol),
-        parseFloat(pos.qty),
-        parseFloat(pos.current_price),
-        parseFloat(pos.avg_entry_price),
+        clientShares,
+        price,
+        avgCost,
         parseFloat(pos.change_today || 0),
         parseFloat(pos.unrealized_intraday_plpc || 0) * 100,
       ]);
     }
 
-    // Record performance snapshot for today
-    const today = new Date().toISOString().split('T')[0];
+    // Daily performance snapshot
     await db.query(`
       INSERT INTO performance_history (user_id, date, value) VALUES ($1,$2,$3)
       ON CONFLICT (user_id, date) DO UPDATE SET value = EXCLUDED.value
-    `, [userId, today, totalValue]);
+    `, [userId, today, clientValue]);
 
-    // Log the sync
+    // Sync log
     await db.query(
       `INSERT INTO alpaca_sync_log (user_id, account_value, positions_count) VALUES ($1,$2,$3)`,
-      [userId, totalValue, positions.length]
+      [userId, clientValue, positions.length]
     );
+  }
 
-    res.json({
-      synced: true,
-      portfolio_value: totalValue,
-      cash: cashBalance,
-      positions: positions.length,
-      synced_at: new Date().toISOString(),
-    });
+  return { totalValue, cashBalance, positions: positions.length, clients: clients.length, unitPrice };
+}
+
+// ── GET /api/alpaca/status ───────────────────────────────────────
+router.get('/status', requireAuth, async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      'SELECT * FROM alpaca_sync_log WHERE user_id = $1 ORDER BY synced_at DESC LIMIT 1',
+      [req.user.id]
+    );
+    const { rows: [fund] } = await db.query('SELECT * FROM fund WHERE id = 1');
+    res.json({ configured: alpaca.isConfigured(), last_sync: rows[0] || null, fund });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/alpaca/sync — manual sync triggered by logged-in user ──
+router.post('/sync', requireAuth, async (req, res) => {
+  try {
+    const result = await runFundSync();
+    res.json({ synced: true, ...result, synced_at: new Date().toISOString() });
   } catch (err) {
     console.error('Alpaca sync error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/alpaca/cron-sync — called by Vercel cron (no user auth) ──
+// Protected by optional CRON_SECRET env var.
+router.get('/cron-sync', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET || '';
+  if (cronSecret) {
+    const auth = req.headers.authorization || '';
+    if (auth !== `Bearer ${cronSecret}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+  try {
+    const result = await runFundSync();
+    res.json({ synced: true, ...result, synced_at: new Date().toISOString() });
+  } catch (err) {
+    console.error('Cron sync error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

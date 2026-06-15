@@ -71,10 +71,7 @@ router.post('/confirm-deposit', requireAuth, async (req, res) => {
       `INSERT INTO transactions (user_id, type, amount, note) VALUES ($1,'DEPOSIT',$2,$3)`,
       [userId, amount, `Stripe deposit`]
     );
-    await db.query(
-      `UPDATE portfolios SET cash_balance = cash_balance + $1, total_value = total_value + $1, updated_at = NOW() WHERE user_id = $2`,
-      [amount, userId]
-    );
+    await allocateUnits(userId, amount);
 
     const trades = await executeTrades(userId, amount);
     res.json({ success: true, amount, trades });
@@ -117,16 +114,39 @@ router.post('/webhook', async (req, res) => {
         `INSERT INTO transactions (user_id, type, amount, note) VALUES ($1,'DEPOSIT',$2,'Stripe deposit')`,
         [userId, amount]
       ).catch(console.error);
-      await db.query(
-        `UPDATE portfolios SET cash_balance = cash_balance + $1, total_value = total_value + $1, updated_at = NOW() WHERE user_id = $2`,
-        [amount, userId]
-      ).catch(console.error);
+      await allocateUnits(userId, amount).catch(console.error);
       await executeTrades(userId, amount).catch(console.error);
     }
   }
 
   res.json({ received: true });
 });
+
+// ── Unit allocation on deposit ──
+// Each deposit buys units in the pooled fund at the current unit price.
+// Unit price = fund.total_value / fund.total_units (starts at $1.00).
+async function allocateUnits(userId, amount) {
+  const { rows: [fund] } = await db.query('SELECT * FROM fund WHERE id = 1');
+  const unitPrice  = fund.total_units > 0 ? parseFloat(fund.total_value) / parseFloat(fund.total_units) : 1.0;
+  const newUnits   = amount / unitPrice;
+  const newFundValue = parseFloat(fund.total_value) + amount;
+  const newFundUnits = parseFloat(fund.total_units) + newUnits;
+  const newUnitPrice = newFundUnits > 0 ? newFundValue / newFundUnits : 1.0;
+
+  await db.query(
+    `UPDATE fund SET total_value=$1, total_units=$2, unit_price=$3, updated_at=NOW() WHERE id=1`,
+    [newFundValue, newFundUnits, newUnitPrice]
+  );
+  await db.query(
+    `UPDATE portfolios
+     SET units_owned  = units_owned + $1,
+         total_value  = (units_owned + $1) * $2,
+         cash_balance = cash_balance + $3,
+         updated_at   = NOW()
+     WHERE user_id = $4`,
+    [newUnits, newUnitPrice, amount, userId]
+  );
+}
 
 // ── Alpaca auto-invest after deposit ──
 const ALLOCATIONS = [

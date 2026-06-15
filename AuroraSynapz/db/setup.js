@@ -1,6 +1,7 @@
 const pool = require('./index');
 
 async function setup() {
+  // Core tables
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id         SERIAL PRIMARY KEY,
@@ -98,6 +99,50 @@ async function setup() {
 
     CREATE UNIQUE INDEX IF NOT EXISTS perf_history_user_date
       ON performance_history (user_id, date);
+  `);
+
+  // Fund table — single row representing the pooled Alpaca account
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS fund (
+      id           INTEGER     PRIMARY KEY DEFAULT 1,
+      total_value  NUMERIC     NOT NULL DEFAULT 0,
+      total_units  NUMERIC     NOT NULL DEFAULT 0,
+      unit_price   NUMERIC     NOT NULL DEFAULT 1,
+      updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    INSERT INTO fund (id, total_value, total_units, unit_price)
+    VALUES (1, 0, 0, 1)
+    ON CONFLICT (id) DO NOTHING;
+  `);
+
+  // Add units_owned to portfolios (migration — safe to run multiple times)
+  await pool.query(`
+    ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS units_owned NUMERIC NOT NULL DEFAULT 0;
+  `);
+
+  // One-time migration: seed fund and units from existing portfolio data
+  // Only runs if fund has no units but portfolios already have value
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF (SELECT total_units FROM fund WHERE id = 1) = 0
+         AND EXISTS (SELECT 1 FROM portfolios WHERE total_value > 0) THEN
+
+        -- Give each existing client units equal to their current total_value
+        -- at an initial unit price of $1.00
+        UPDATE portfolios SET units_owned = total_value WHERE total_value > 0;
+
+        -- Initialise the fund from the sum of those portfolios
+        UPDATE fund SET
+          total_units = (SELECT COALESCE(SUM(units_owned), 0) FROM portfolios),
+          total_value = (SELECT COALESCE(SUM(total_value),  0) FROM portfolios),
+          unit_price  = 1,
+          updated_at  = NOW()
+        WHERE id = 1;
+
+      END IF;
+    END;
+    $$;
   `);
 }
 

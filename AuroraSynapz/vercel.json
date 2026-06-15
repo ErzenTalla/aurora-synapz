@@ -4,7 +4,7 @@
   ],
   "crons": [
     {
-      "path": "/api/alpaca/sync",
+      "path": "/api/alpaca/cron-sync",
       "schedule": "0 21 * * 1-5"
     }
   ]
