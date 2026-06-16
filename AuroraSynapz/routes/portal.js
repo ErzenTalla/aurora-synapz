@@ -110,9 +110,27 @@ router.get('/allocation', async (req, res) => {
 router.get('/documents', async (req, res) => {
   try {
     const { rows } = await db.query(
-      'SELECT * FROM documents WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]
+      `SELECT id, user_id, title, type, period, size_kb, filename, mime_type, created_at
+       FROM documents WHERE user_id = $1 ORDER BY created_at DESC`, [req.user.id]
     );
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/portal/documents/:id/download — client downloads their own document
+router.get('/documents/:id/download', async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const { rows: [doc] } = await db.query(
+      'SELECT * FROM documents WHERE id = $1 AND user_id = $2', [id, req.user.id]
+    );
+    if (!doc || !doc.file_data) return res.status(404).json({ error: 'Document not found' });
+
+    res.setHeader('Content-Type', doc.mime_type || 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${doc.filename || doc.title}"`);
+    res.send(doc.file_data);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

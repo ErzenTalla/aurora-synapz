@@ -1,4 +1,5 @@
 const express      = require('express');
+const multer       = require('multer');
 const bcrypt       = require('bcryptjs');
 const requireAdmin = require('../middleware/requireAdmin');
 const db           = require('../db/index');
@@ -6,6 +7,16 @@ const alpaca       = require('../services/alpaca');
 
 const router = express.Router();
 router.use(requireAdmin);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['application/pdf', 'image/png', 'image/jpeg'];
+    if (!allowed.includes(file.mimetype)) return cb(new Error('Only PDF, PNG, or JPEG files are allowed'));
+    cb(null, true);
+  },
+});
 
 // ── Overview stats ──────────────────────────────────────────────
 router.get('/stats', async (req, res) => {
@@ -161,6 +172,64 @@ router.get('/deposits', async (req, res) => {
       LIMIT 50
     `);
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Documents ─────────────────────────────────────────────────
+
+// GET /api/admin/documents — list all documents (newest first)
+router.get('/documents', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT d.id, d.user_id, d.title, d.type, d.period, d.size_kb,
+             d.filename, d.mime_type, d.created_at, u.name, u.email
+      FROM documents d
+      JOIN users u ON u.id = d.user_id
+      ORDER BY d.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/admin/documents — upload a document for a client
+router.post('/documents', upload.single('file'), async (req, res) => {
+  const userId = parseInt(req.body.user_id);
+  const { title, type, period } = req.body;
+
+  if (!userId || !title || !type || !period) {
+    return res.status(400).json({ error: 'user_id, title, type, and period are required' });
+  }
+  if (!req.file) return res.status(400).json({ error: 'A file is required' });
+
+  try {
+    const { rows: [user] } = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
+    if (!user) return res.status(404).json({ error: 'Client not found' });
+
+    const sizeKb = Math.ceil(req.file.size / 1024);
+    const { rows: [doc] } = await db.query(
+      `INSERT INTO documents (user_id, title, type, period, size_kb, filename, mime_type, file_data, uploaded_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, user_id, title, type, period, size_kb, filename, mime_type, created_at`,
+      [userId, title, type, period, sizeKb, req.file.originalname, req.file.mimetype, req.file.buffer, req.user.id]
+    );
+    res.status(201).json(doc);
+  } catch (err) {
+    console.error('Document upload error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/admin/documents/:id
+router.delete('/documents/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const { rows: [doc] } = await db.query('DELETE FROM documents WHERE id = $1 RETURNING id', [id]);
+    if (!doc) return res.status(404).json({ error: 'Document not found' });
+    res.json({ deleted: id });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -338,6 +407,14 @@ router.patch('/withdrawals/:id/status', async (req, res) => {
     console.error('Update withdrawal error:', err.message);
     res.status(500).json({ error: err.message });
   }
+});
+
+// Multer errors (oversized file, wrong type) land here instead of crashing
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError || err.message?.includes('Only PDF')) {
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
 });
 
 module.exports = router;

@@ -137,6 +137,14 @@ async function setup() {
     );
   `);
 
+  // Add file storage columns to documents (migration — safe to run multiple times)
+  await pool.query(`
+    ALTER TABLE documents ADD COLUMN IF NOT EXISTS filename     TEXT;
+    ALTER TABLE documents ADD COLUMN IF NOT EXISTS mime_type    TEXT;
+    ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_data    BYTEA;
+    ALTER TABLE documents ADD COLUMN IF NOT EXISTS uploaded_by  INTEGER REFERENCES users(id);
+  `);
+
   // One-time migration: seed fund and units from existing portfolio data
   // Only runs if fund has no units but portfolios already have value
   await pool.query(`
