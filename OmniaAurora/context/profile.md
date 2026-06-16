@@ -57,7 +57,8 @@ Living document. Updated as Aurora learns more. Anything marked `TBD` is a known
 ## Working Style
 
 - **How I prefer to work:** TBD
-- **How I prefer to receive information:** TBD (e.g. concise bullets vs. narrative, blunt vs. softened)
+- **Interaction mode:** Voice-first, long-term — wants to *talk* to Aurora like a voice assistant, not primarily type/read chat. Text/chat should remain available as an option, but it's not the primary intended mode once a real product exists. Confirms and strengthens the original vision doc's "voice-first interaction" rationale for going iPhone-first.
+- **How I prefer to receive information:** TBD (e.g. concise bullets vs. narrative, blunt vs. softened) — note: voice preference suggests briefings may eventually need a spoken-friendly format (shorter, more conversational) in addition to/instead of the written bullet structure used today.
 - **How I make decisions:** TBD
 - **What creates focus:** TBD
 - **What creates stress:** TBD

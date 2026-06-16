@@ -13,7 +13,7 @@ Following the baby-steps MVP path: prove the daily-briefing loop manually before
 | 2 | Tighten format/voice | ⏳ Pending |
 | 3 | Automate one context source | ⏳ Pending |
 | 4 | Checkpoint: did this earn a real interface? | ⏳ Pending |
-| 5 | First iPhone app (read-only) | ⏳ Pending |
+| 5 | First iPhone app (read-only, **voice-first** — talk to Aurora, not just chat; text remains a secondary option) | ⏳ Pending |
 | 6 | First confirmed write action | ⏳ Pending |
 
 ## Scope (Step 0)
