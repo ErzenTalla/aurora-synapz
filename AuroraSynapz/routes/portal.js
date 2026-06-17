@@ -2,6 +2,7 @@ const express     = require('express');
 const requireAuth = require('../middleware/auth');
 const db          = require('../db/index');
 const alpaca      = require('../services/alpaca');
+const emailSvc    = require('../services/email');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -206,6 +207,7 @@ router.post('/withdraw', async (req, res) => {
     // Place Alpaca sell orders to raise cash for the withdrawal
     const sells = await sellForWithdrawal(amount, clientShare).catch(() => []);
 
+    emailSvc.sendWithdrawalRequested({ to: req.user.email, name: req.user.name, amount, withdrawalId: wr.id });
     res.json({ success: true, withdrawalId: wr.id, amount, sells });
   } catch (err) {
     console.error('Withdraw error:', err.message);

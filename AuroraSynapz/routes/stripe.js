@@ -2,6 +2,7 @@ const express     = require('express');
 const requireAuth = require('../middleware/auth');
 const db          = require('../db/index');
 const alpaca      = require('../services/alpaca');
+const emailSvc    = require('../services/email');
 
 const router = express.Router();
 
@@ -74,6 +75,7 @@ router.post('/confirm-deposit', requireAuth, async (req, res) => {
     await allocateUnits(userId, amount);
 
     const trades = await executeTrades(userId, amount);
+    emailSvc.sendDepositConfirmation({ to: req.user.email, name: req.user.name, amount });
     res.json({ success: true, amount, trades });
   } catch (err) {
     console.error('Confirm deposit error:', err.message);
@@ -116,6 +118,9 @@ router.post('/webhook', async (req, res) => {
       ).catch(console.error);
       await allocateUnits(userId, amount).catch(console.error);
       await executeTrades(userId, amount).catch(console.error);
+
+      const { rows: [user] } = await db.query('SELECT name, email FROM users WHERE id = $1', [userId]).catch(() => ({ rows: [] }));
+      if (user) emailSvc.sendDepositConfirmation({ to: user.email, name: user.name, amount });
     }
   }
 

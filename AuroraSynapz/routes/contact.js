@@ -1,6 +1,6 @@
-const express    = require('express');
-const nodemailer = require('nodemailer');
-const db         = require('../db/index');
+const express   = require('express');
+const emailSvc  = require('../services/email');
+const db        = require('../db/index');
 
 const router = express.Router();
 
@@ -17,26 +17,17 @@ router.post('/', async (req, res) => {
       [first_name, last_name, email, phone || null, service || null, assets || null, message || null]
     );
 
-    if (process.env.SMTP_HOST && process.env.SMTP_USER) {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: false,
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-      });
-      transporter.sendMail({
-        from: `"Aurora Synapz Website" <${process.env.SMTP_USER}>`,
-        to: process.env.MAIL_TO || process.env.SMTP_USER,
-        subject: `New Inquiry — ${first_name} ${last_name}`,
-        html: `<h2>New Contact Inquiry</h2>
-               <p><b>Name:</b> ${first_name} ${last_name}</p>
-               <p><b>Email:</b> ${email}</p>
-               <p><b>Phone:</b> ${phone || '—'}</p>
-               <p><b>Service:</b> ${service || '—'}</p>
-               <p><b>Assets:</b> ${assets || '—'}</p>
-               <p><b>Message:</b> ${message || '—'}</p>`,
-      }).catch(err => console.error('Email error:', err.message));
-    }
+    emailSvc.sendMail({
+      to: process.env.MAIL_TO || process.env.SMTP_USER,
+      subject: `New Inquiry — ${first_name} ${last_name}`,
+      html: `<h2>New Contact Inquiry</h2>
+             <p><b>Name:</b> ${first_name} ${last_name}</p>
+             <p><b>Email:</b> ${email}</p>
+             <p><b>Phone:</b> ${phone || '—'}</p>
+             <p><b>Service:</b> ${service || '—'}</p>
+             <p><b>Assets:</b> ${assets || '—'}</p>
+             <p><b>Message:</b> ${message || '—'}</p>`,
+    });
 
     res.status(201).json({ success: true, message: 'Inquiry received.' });
   } catch (err) {

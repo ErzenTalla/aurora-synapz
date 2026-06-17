@@ -4,6 +4,7 @@ const bcrypt       = require('bcryptjs');
 const requireAdmin = require('../middleware/requireAdmin');
 const db           = require('../db/index');
 const alpaca       = require('../services/alpaca');
+const emailSvc     = require('../services/email');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -278,6 +279,7 @@ async function collectFees(dryRun = false) {
         `INSERT INTO transactions (user_id, type, amount, note) VALUES ($1, 'FEE', $2, $3)`,
         [client.user_id, feeAmount, `Monthly management fee (${(feeRate * 100).toFixed(2)}% p.a.)`]
       );
+      emailSvc.sendFeeNotice({ to: client.email, name: client.name, amount: feeAmount, feeRate });
       totalFeeCollected += feeAmount;
     }
   }
@@ -368,7 +370,10 @@ router.patch('/withdrawals/:id/status', async (req, res) => {
   }
 
   try {
-    const { rows: [wr] } = await db.query('SELECT * FROM withdrawal_requests WHERE id = $1', [id]);
+    const { rows: [wr] } = await db.query(
+      `SELECT wr.*, u.name, u.email FROM withdrawal_requests wr
+       JOIN users u ON u.id = wr.user_id WHERE wr.id = $1`, [id]
+    );
     if (!wr) return res.status(404).json({ error: 'Withdrawal not found' });
     if (wr.status === 'processed') return res.status(400).json({ error: 'Already processed' });
 
@@ -402,6 +407,7 @@ router.patch('/withdrawals/:id/status', async (req, res) => {
       [status, notes, id]
     );
 
+    emailSvc.sendWithdrawalStatus({ to: wr.email, name: wr.name, amount: wr.amount, withdrawalId: id, status });
     res.json({ success: true, id, status });
   } catch (err) {
     console.error('Update withdrawal error:', err.message);
