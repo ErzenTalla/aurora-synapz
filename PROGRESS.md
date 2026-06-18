@@ -47,6 +47,8 @@ Context: AlpineTech already has an active business bank account at **Raiffeisen 
 
 **Next step:** contact Paysera directly to confirm (a) whether card payments are possible for a Kosovo-registered merchant or if it's bank-transfer-only, and (b) the concrete onboarding path for AlpineTech given the existing Raiffeisen Kosovo account. In parallel, a direct inquiry to Monri to confirm Kosovo merchant eligibility would clarify whether card-payment parity with Stripe is achievable through them instead. No gateway has been chosen yet — this is exploratory, nothing wired into code.
 
+**Update (2026-06-18):** user submitted the inquiry via Paysera's "Na shkruani" business contact form (product: Paysera Checkout), covering the card-vs-bank-transfer question, settlement to the existing Raiffeisen Kosovo account, business account onboarding, and API/integration docs. Awaiting their reply (they quote ~3 business days). Monri has not been contacted yet. Step 6 stays paused until Paysera responds.
+
 ---
 
 ## AlpineTech Website
