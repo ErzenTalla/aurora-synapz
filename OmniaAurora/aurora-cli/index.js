@@ -6,9 +6,9 @@ import { stdin, stdout } from 'node:process';
 import Anthropic from '@anthropic-ai/sdk';
 import { BRIEFING_SYSTEM_PROMPT, buildUserMessage } from './lib/buildPrompt.js';
 import { QUESTIONS } from './lib/questions.js';
+import { getProfile, saveBriefing } from './lib/store.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const PROFILE_PATH = path.join(ROOT, 'context', 'profile.md');
 const BRIEFINGS_DIR = path.join(ROOT, 'daily-briefings');
 
 async function readAllStdin() {
@@ -44,7 +44,7 @@ async function main() {
     process.exit(1);
   }
 
-  const profile = fs.readFileSync(PROFILE_PATH, 'utf-8');
+  const profile = await getProfile();
   const todayContext = await gatherTodayContext();
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
@@ -69,11 +69,14 @@ async function main() {
 
   console.log(briefing);
 
+  const fileContent = `# Aurora Daily Executive Briefing — ${date}\n\n## Input context\n${todayContext}\n\n## Briefing\n${briefing}\n`;
+
   fs.mkdirSync(BRIEFINGS_DIR, { recursive: true });
   const outPath = path.join(BRIEFINGS_DIR, `${date}.md`);
-  fs.writeFileSync(outPath, `# Aurora Daily Executive Briefing — ${date}\n\n## Input context\n${todayContext}\n\n## Briefing\n${briefing}\n`);
+  fs.writeFileSync(outPath, fileContent);
+  await saveBriefing(date, fileContent);
 
-  console.log(`\nSaved to ${outPath}`);
+  console.log(`\nSaved to ${outPath} (and synced to Blob)`);
 }
 
 main().catch((err) => {

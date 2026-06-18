@@ -1,11 +1,7 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { put } from '@vercel/blob';
 import Anthropic from '@anthropic-ai/sdk';
 import { BRIEFING_SYSTEM_PROMPT, buildUserMessage } from '../aurora-cli/lib/buildPrompt.js';
 import { formatTodayContext } from '../aurora-cli/lib/questions.js';
-
-const PROFILE_PATH = path.join(process.cwd(), 'context', 'profile.md');
+import { getProfile, saveBriefing } from '../aurora-cli/lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -18,7 +14,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const profile = fs.readFileSync(PROFILE_PATH, 'utf-8');
+  const profile = await getProfile();
   const todayContext = formatTodayContext(req.body || {});
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
@@ -39,10 +35,9 @@ export default async function handler(req, res) {
     .map((block) => block.text)
     .join('\n');
 
-  await put(
-    `daily-briefings/${date}.md`,
-    `# Aurora Daily Executive Briefing — ${date}\n\n## Input context\n${todayContext}\n\n## Briefing\n${briefing}\n`,
-    { access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'text/markdown' }
+  await saveBriefing(
+    date,
+    `# Aurora Daily Executive Briefing — ${date}\n\n## Input context\n${todayContext}\n\n## Briefing\n${briefing}\n`
   );
 
   res.status(200).json({ date, briefing });

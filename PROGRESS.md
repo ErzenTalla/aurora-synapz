@@ -91,10 +91,35 @@ Built `OmniaAurora/aurora-cli/` — a small Node CLI (`npm run brief`) that asks
 
 **2026-06-17:** Real Anthropic API key obtained and added to `.env` (billing country: Austria, user's legitimate billing residence — unrelated to the separate Kosovo/BQK regulatory question for Aurora Synapz). First real run surfaced a bug: `index.js` used interactive `readline.question()` per prompt, which silently truncates after ~2 questions when stdin is piped/non-TTY (a Node readline limitation, not a one-off fluke) — fixed by detecting `stdin.isTTY` and falling back to reading all piped input at once, splitting by line in question order. `npm run brief` now runs end-to-end and saves to `OmniaAurora/daily-briefings/YYYY-MM-DD.md`.
 
-**Known rough edge:** the model has no real-time clock, so it sometimes guesses/hallucinates the wrong date in the briefing text itself (the saved filename's date is correct since that comes from `new Date()` in code, not the model). Not yet fixed — would need the actual date passed into the prompt explicitly.
+**2026-06-18:** Fixed the date-guessing bug — `index.js` now computes the real date/weekday via `Date()` and passes it explicitly into the prompt (`buildUserMessage`), with an instruction not to guess. Verified: briefing text now matches the real date. Also extracted the `QUESTIONS` list into `aurora-cli/lib/questions.js` so the CLI and the new backend (below) share one source of truth.
 
 ### Daily briefings log
-`OmniaAurora/daily-briefings/` — 2026-06-16 (manual, before the CLI existed) and 2026-06-17 (first fully automated run via `aurora-cli`).
+`OmniaAurora/daily-briefings/` — 2026-06-16 (manual, before the CLI existed), 2026-06-17 (first fully automated run via `aurora-cli`), 2026-06-18 (first run with the date fix verified).
+
+### Step 5 — first real interface (backend + native iOS app)
+**2026-06-18:** Decided the manual/CLI loop earned a real interface. Built and deployed both halves:
+
+- **Backend:** `OmniaAurora/api/briefing.js`, a new standalone Vercel project (`omnia-aurora`, separate from the `aurora-synapz` project) deployed to `https://omnia-aurora.vercel.app`. Reuses `aurora-cli/lib/buildPrompt.js` directly (same prompt logic, single source of truth), gated by a static shared-secret header (`X-Aurora-Secret`, single-user personal app — simplicity over a full auth system), and persists each day's briefing to Vercel Blob (`daily-briefings/YYYY-MM-DD.md`) so history survives regardless of which client generated it. Verified via curl: correct real date, well-formed briefing, confirmed written to Blob.
+- **iOS app:** `OmniaAurora/iOS/`, a native SwiftUI app (XcodeGen-based) mirroring the existing `AuroraSynapz/iOS/` conventions (Models/Services/Views/Utils split, same project.yml shape). Captures the 6 daily-context questions via tap-to-dictate (`SFSpeechRecognizer` + `AVAudioEngine`), POSTs to the new backend, and reads the returned briefing aloud (`AVSpeechSynthesizer`). Builds cleanly and launches in Simulator; UI and mic/speech permission prompts confirmed visually via screenshot.
+
+**Known gap:** the full tap-dictate-listen flow hasn't been exercised through the UI itself yet — sandbox had no Accessibility automation permission to script taps, and Simulator mic/speech dictation isn't reliably testable headlessly anyway. Network path is proven (curl), UI is proven (build + launch + screenshot), but the end-to-end human flow still needs a hands-on run on device/Simulator.
+
+**Trade-off flagged and accepted:** `AURORA_APP_SECRET` is hardcoded as a literal string in `iOS/Aurora/Services/APIService.swift` and committed to git history. Deliberate simplicity choice for a personal single-user MVP — rotate the secret if this repo's visibility ever changes.
+
+All of the above is committed (`583ba4c`), not yet pushed to `origin/master` (local branch is ahead by 7 commits as of 2026-06-18).
+
+### Step 5 expansion — full functional app (same day, 2026-06-18)
+User hand-tested the first Step 5 build: **2/5**. Decided to expand from "basics" to a fuller app rather than iterate slowly. Architecture shift: **Vercel Blob became the shared source of truth** for `profile.md` and briefing history (previously the backend only read a git-committed file) — both the iOS app and `aurora-cli` now read/write through a new shared module, `aurora-cli/lib/store.js` (`getProfile`/`saveProfile`/`listBriefings`/`getBriefing`/`saveBriefing`). The git-committed `context/profile.md` is now a seed/backup only; `aurora-cli`'s `npm run profile` mirrors Blob writes back into it so git stays a close (not live) record.
+
+**Backend additions:** `api/profile.js` (GET/POST), `api/briefings.js` (list + `?date=` detail), `api/chat.js` (follow-up Q&A about a specific day's briefing, stateless — client resends the conversation each turn). `CHAT_SYSTEM_PROMPT` added to `buildPrompt.js` (short, conversational, no markdown — replies get read aloud).
+
+**Deploy hiccup:** moving the profile-seed file read into `store.js` using `import.meta.dirname`-based path resolution broke on Vercel (`ENOENT` — ✘Vercel's file tracer didn't bundle `context/profile.md` since it couldn't statically trace that path pattern). Fixed by switching to the same `path.join(process.cwd(), ...)` pattern the original working code used, which the tracer does recognize; `store.js` now tries that first and falls back to an `import.meta.dirname`-relative path for local CLI use (cwd varies depending on where `aurora-cli` is invoked from).
+
+**`aurora-cli` parity:** added `@vercel/blob` + `BLOB_READ_WRITE_TOKEN`; `npm run brief` now also pushes to Blob (not just the local file); three new commands — `npm run history` (list/view past briefings), `npm run chat` (follow-up Q&A from the terminal), `npm run profile` (opens `$EDITOR`, syncs to Blob and the local file on save). All four verified end-to-end, including non-destructive round-trip tests against the real profile/briefing data (temporarily wrote a test marker, confirmed sync, reverted both Blob and the local file before finishing).
+
+**iOS app — conversational redesign:** `ContentView` is now a 4-tab `TabView` (Today/History/Chat/Profile) sharing one `SpeechService` instance via `@EnvironmentObject` (avoids conflicting `AVAudioEngine` sessions across tabs). `TodayView` replaces the old static 6-field form with a one-question-at-a-time flow — Aurora speaks each question (`AVSpeechSynthesizerDelegate` added to `SpeechService` so code can react when she's done talking), then auto-starts listening; typing remains available as a fallback per the original voice-first requirement. New `HistoryView`, `ChatView`, `ProfileView`. Build verified clean (`xcodebuild` succeeded), launched in Simulator, all 4 tabs visible.
+
+**Same known gap as before:** couldn't script taps through History/Chat/Profile from this sandbox (no Accessibility automation permission); verified those paths via curl against the real deployed backend instead, plus code-level tracing against the now-confirmed-working endpoints. Full hands-on retest is the user's next step.
 
 ---
 

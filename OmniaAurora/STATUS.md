@@ -9,11 +9,11 @@ Following the baby-steps MVP path: prove the daily-briefing loop manually before
 | Step | Item | Status |
 |---|---|---|
 | 0 | Define scope + question list | ✅ Done (see below) |
-| 1 | Manual daily briefing (you paste context, Aurora responds in chat) | 🟡 Starting now |
-| 2 | Tighten format/voice | ⏳ Pending |
-| 3 | Automate one context source | ⏳ Pending |
-| 4 | Checkpoint: did this earn a real interface? | ⏳ Pending |
-| 5 | First iPhone app (read-only, **voice-first** — talk to Aurora, not just chat; text remains a secondary option) | ⏳ Pending |
+| 1 | Manual daily briefing (you paste context, Aurora responds in chat) | ✅ Done |
+| 2 | Tighten format/voice | ✅ Done (format proven stable across 2026-06-16/17/18 briefings) |
+| 3 | Automate one context source | ✅ Done — `aurora-cli` automates the whole loop (context → Claude → saved briefing) |
+| 4 | Checkpoint: did this earn a real interface? | ✅ Done — decided yes, moved to Step 5 (2026-06-18) |
+| 5 | First iPhone app (read-only, **voice-first** — talk to Aurora, not just chat; text remains a secondary option) | 🟡 Hands-on tested by user: 2/5. Expanded same day — conversational Today flow (Aurora speaks/listens per question), History tab, Chat-about-today's-briefing tab, in-app Profile editing, `aurora-cli` parity (history/chat/profile commands). Not yet re-tested by hand since the expansion. |
 | 6 | First confirmed write action | ⏳ Pending |
 
 ## Scope (Step 0)

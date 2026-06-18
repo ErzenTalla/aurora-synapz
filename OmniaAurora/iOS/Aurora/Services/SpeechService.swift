@@ -6,6 +6,7 @@ import AVFoundation
 final class SpeechService: NSObject, ObservableObject {
     @Published var isRecording = false
     @Published var transcript = ""
+    @Published var isSpeaking = false
 
     private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private let audioEngine = AVAudioEngine()
@@ -13,6 +14,12 @@ final class SpeechService: NSObject, ObservableObject {
     private var task: SFSpeechRecognitionTask?
 
     private let synthesizer = AVSpeechSynthesizer()
+    private var onSpeakFinish: (() -> Void)?
+
+    override init() {
+        super.init()
+        synthesizer.delegate = self
+    }
 
     func requestPermissions() async -> Bool {
         let speechStatus: SFSpeechRecognizerAuthorizationStatus = await withCheckedContinuation { continuation in
@@ -72,10 +79,30 @@ final class SpeechService: NSObject, ObservableObject {
         isRecording = false
     }
 
-    func speak(_ text: String) {
+    func speak(_ text: String, onFinish: (() -> Void)? = nil) {
+        onSpeakFinish = onFinish
+        isSpeaking = true
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
         utterance.rate = 0.5
         synthesizer.speak(utterance)
+    }
+}
+
+extension SpeechService: AVSpeechSynthesizerDelegate {
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            self.isSpeaking = false
+            let finish = self.onSpeakFinish
+            self.onSpeakFinish = nil
+            finish?()
+        }
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            self.isSpeaking = false
+            self.onSpeakFinish = nil
+        }
     }
 }

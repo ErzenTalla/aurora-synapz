@@ -6,10 +6,14 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "brief": "node index.js"
+    "brief": "node index.js",
+    "history": "node history.js",
+    "chat": "node chat.js",
+    "profile": "node profile.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
+    "@vercel/blob": "^2.4.1",
     "dotenv": "^16.4.5"
   }
 }
