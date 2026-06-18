@@ -18,8 +18,8 @@ Live at: https://aurorasyanapz.com
 | 2 | Withdrawal flow (client request → Alpaca proportional sell → admin approve/reject) | ✅ Done |
 | 3 | Management fee mechanism (monthly, per-client rate, cron-collected) | ✅ Done |
 | 4 | Admin document upload (for client docs/statements) | ✅ Done |
-| 5 | Email notifications (deposits, withdrawals, fees) | 🚧 Code done — blocked on SMTP credentials |
-| 6 | Real Stripe live keys | 🚧 Blocked — waiting on user's Stripe account approval |
+| 5 | Email notifications (deposits, withdrawals, fees) | ✅ Done |
+| 6 | Real Stripe live keys | 🚧 Blocked — Stripe account approved, but paused on Kosovo payout problem (see below) |
 | 7 | Live Alpaca account funding | 🚧 Blocked — waiting on user's Alpaca account approval |
 
 ### Also fixed along the way
@@ -30,10 +30,12 @@ Live at: https://aurorasyanapz.com
 - Added `services/email.js` — shared Nodemailer wrapper (SMTP, no-ops silently if unconfigured). Wired into: Stripe deposit confirm + webhook (`sendDepositConfirmation`), client withdrawal request (`sendWithdrawalRequested`), admin withdrawal approve/process/reject (`sendWithdrawalStatus`), and monthly fee collection (`sendFeeNotice`). Refactored the existing contact-form mailer (`routes/contact.js`) to use the same shared service instead of its own ad hoc transporter.
 
 ### Blocked on user / external
-- **Stripe live keys** — pending account document approval.
+- **Stripe live keys (Step 6)** — Stripe account itself is approved, but user hit a wall trying to add payout bank details: Stripe doesn't list Kosovo as a supported payout country, and the bank account they want to use (Alpine's, in Kosovo) can't be added. Decided to pause Step 6 entirely (no live keys wired in) until resolved with legal/financial advisor — same underlying issue as the BQK item below, just surfaced concretely on the Stripe payout screen (2026-06-18).
 - **Alpaca live account** — pending account document approval.
 - **Kosovo regulatory/legal (BQK)** — user consulting separately with legal/financial advisor; gates real-money operation, no code action pending.
-- **SMTP credentials** — Step 5 email code is written and wired in, but emails are silently no-op until `SMTP_HOST`, `SMTP_PORT` (optional, default 587), `SMTP_USER`, `SMTP_PASS`, and optionally `MAIL_TO` are set (locally in `.env` and in Vercel env vars — confirmed neither currently has them set). Decided on a dedicated Gmail account (not personal, not Workspace) for the From address, e.g. `aurorasynapz@gmail.com` — user is creating it + a 2FA app password before next session. Once user provides: (1) the Gmail address, (2) the 16-char app password, (3) the MAIL_TO inbox — add `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER`, `SMTP_PASS`, `MAIL_TO` to local `.env` and Vercel prod env vars, then send a real test (e.g. trigger a test deposit or call `services/email.js` directly) to confirm end-to-end.
+
+### Step 5 closeout (2026-06-18)
+SMTP wired up with a dedicated Gmail account (`alpinetechconsultancy@gmail.com`, app password, not personal/Workspace) as the sender, notifications landing at `erzentalla1@gmail.com`. `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER`, `SMTP_PASS`, `MAIL_TO` added to local `.env` and Vercel prod env vars; redeployed to production to pick up the new vars. Verified end-to-end by calling all four `services/email.js` functions directly (`sendDepositConfirmation`, `sendWithdrawalRequested`, `sendWithdrawalStatus`, `sendFeeNotice`) — all four delivered and confirmed correct by user. Did not run the flows through real Stripe/Alpaca/DB transactions against production, since that would mutate the seeded demo portfolio for no added signal (the email call sites are unconditional and untouched by this verification).
 
 ---
 
