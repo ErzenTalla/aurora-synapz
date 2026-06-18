@@ -80,6 +80,7 @@ final class SpeechService: NSObject, ObservableObject {
     }
 
     func speak(_ text: String, onFinish: (() -> Void)? = nil) {
+        if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
         onSpeakFinish = onFinish
         isSpeaking = true
         let utterance = AVSpeechUtterance(string: text)

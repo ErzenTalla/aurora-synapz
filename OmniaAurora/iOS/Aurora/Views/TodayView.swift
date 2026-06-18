@@ -104,7 +104,6 @@ struct TodayView: View {
             .background(Theme.gold)
             .foregroundStyle(Theme.navy)
             .cornerRadius(12)
-            .disabled(speech.isSpeaking)
         }
         .padding()
         .background(Theme.navy2.opacity(0.4))

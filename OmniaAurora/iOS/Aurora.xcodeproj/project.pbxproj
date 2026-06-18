@@ -13,14 +13,27 @@
 		1C05EDF02A1B14B8950940A9 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9F99E547CF2ADEC0738C47 /* Models.swift */; };
 		270C84FA94032131F6E32DBC /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF25EAF64D05F3435EF670CB /* HistoryView.swift */; };
 		3F1A03FCA733452231D74C41 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F87F7BCB8984E4E2277B69F /* Theme.swift */; };
+		942CE6783C632D9B6C8F58ED /* AuroraUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2736024F981FD786A9917885 /* AuroraUITests.swift */; };
 		98DD428BABF2BDAF3017772E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A41F303E13BD97E90A9C28 /* ContentView.swift */; };
 		AFAD1E7D0BE0E83BA15F5D54 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264CCE51B59F551D49FFEC5B /* APIService.swift */; };
 		B0BCEF968285E49859BFDDA3 /* AuroraApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCB3719991A6FFE9C5EE651F /* AuroraApp.swift */; };
 		FA6B2694000DC581BE6FDF51 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7559C80B3AE39F96FEF0110C /* TodayView.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		BEF26695C4E9D450765F3C45 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5D86FCEB22D9DBE7ED24A12 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 42A5C0E29A2F7401AE1DAAA6;
+			remoteInfo = Aurora;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		189DD5F02DDA31E8724E28BC /* AuroraUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AuroraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		264CCE51B59F551D49FFEC5B /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
+		2736024F981FD786A9917885 /* AuroraUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraUITests.swift; sourceTree = "<group>"; };
 		3917FFF546F3AB1C857AD9DE /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		6F87F7BCB8984E4E2277B69F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7559C80B3AE39F96FEF0110C /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
@@ -56,10 +69,19 @@
 			path = Utils;
 			sourceTree = "<group>";
 		};
+		73424F18C1CC7016E11A8AF3 /* AuroraUITests */ = {
+			isa = PBXGroup;
+			children = (
+				2736024F981FD786A9917885 /* AuroraUITests.swift */,
+			);
+			path = AuroraUITests;
+			sourceTree = "<group>";
+		};
 		829622D1999AC5BF17B88CCF = {
 			isa = PBXGroup;
 			children = (
 				000AB1D6A3A873FB102548D0 /* Aurora */,
+				73424F18C1CC7016E11A8AF3 /* AuroraUITests */,
 				BB330B0362CF6776AF1A98BD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,6 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				A078D712EDB91254FB4C65EB /* Aurora.app */,
+				189DD5F02DDA31E8724E28BC /* AuroraUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -121,6 +144,24 @@
 			productReference = A078D712EDB91254FB4C65EB /* Aurora.app */;
 			productType = "com.apple.product-type.application";
 		};
+		DE6A1029B193925F8B0C10D2 /* AuroraUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F8789D24D7485D0D20178FEA /* Build configuration list for PBXNativeTarget "AuroraUITests" */;
+			buildPhases = (
+				199CCD6A071DC51CA427AA51 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				107A95BC40299BB688158591 /* PBXTargetDependency */,
+			);
+			name = AuroraUITests;
+			packageProductDependencies = (
+			);
+			productName = AuroraUITests;
+			productReference = 189DD5F02DDA31E8724E28BC /* AuroraUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -130,6 +171,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					DE6A1029B193925F8B0C10D2 = {
+						TestTargetID = 42A5C0E29A2F7401AE1DAAA6;
+					};
 				};
 			};
 			buildConfigurationList = 4502CB802A610543D6772484 /* Build configuration list for PBXProject "Aurora" */;
@@ -147,6 +191,7 @@
 			projectRoot = "";
 			targets = (
 				42A5C0E29A2F7401AE1DAAA6 /* Aurora */,
+				DE6A1029B193925F8B0C10D2 /* AuroraUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -169,7 +214,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		199CCD6A071DC51CA427AA51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				942CE6783C632D9B6C8F58ED /* AuroraUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		107A95BC40299BB688158591 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 42A5C0E29A2F7401AE1DAAA6 /* Aurora */;
+			targetProxy = BEF26695C4E9D450765F3C45 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0C1E5F4AFD65F1B0AFE1D062 /* Release */ = {
@@ -311,6 +372,40 @@
 			};
 			name = Debug;
 		};
+		C6E772AE42EA24C8AC66EEDE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.omniaos.aurora.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Aurora;
+			};
+			name = Debug;
+		};
+		C9E38C46C53B00518AB861FC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.omniaos.aurora.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Aurora;
+			};
+			name = Release;
+		};
 		DFB13FE38B46E973567AB156 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -344,6 +439,15 @@
 			buildConfigurations = (
 				33DDB0444D16B491378E71CF /* Debug */,
 				2967E9A58039FB84E2761D2F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F8789D24D7485D0D20178FEA /* Build configuration list for PBXNativeTarget "AuroraUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C6E772AE42EA24C8AC66EEDE /* Debug */,
+				C9E38C46C53B00518AB861FC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

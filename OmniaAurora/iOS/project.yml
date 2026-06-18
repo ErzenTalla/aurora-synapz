@@ -31,3 +31,26 @@ targets:
           - UIInterfaceOrientationPortrait
         NSMicrophoneUsageDescription: Aurora needs the microphone to let you talk through today's context instead of typing it.
         NSSpeechRecognitionUsageDescription: Aurora uses speech recognition to turn what you say into today's briefing context.
+
+  AuroraUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - AuroraUITests
+    dependencies:
+      - target: Aurora
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.omniaos.aurora.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Aurora
+
+schemes:
+  Aurora:
+    build:
+      targets:
+        Aurora: all
+        AuroraUITests: [test]
+    test:
+      targets:
+        - AuroraUITests
