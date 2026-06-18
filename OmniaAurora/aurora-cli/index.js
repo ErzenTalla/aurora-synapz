@@ -19,14 +19,30 @@ const QUESTIONS = [
   ['concerns', "Concerns — anything uncertain or weighing on you?"],
 ];
 
+async function readAllStdin() {
+  const chunks = [];
+  for await (const chunk of stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString('utf-8');
+}
+
 async function gatherTodayContext() {
-  const rl = readline.createInterface({ input: stdin, output: stdout });
   const answers = [];
-  for (const [key, question] of QUESTIONS) {
-    const answer = await rl.question(`${question}\n> `);
-    if (answer.trim()) answers.push(`${key.toUpperCase()}: ${answer.trim()}`);
+
+  if (stdin.isTTY) {
+    const rl = readline.createInterface({ input: stdin, output: stdout });
+    for (const [key, question] of QUESTIONS) {
+      const answer = await rl.question(`${question}\n> `);
+      if (answer.trim()) answers.push(`${key.toUpperCase()}: ${answer.trim()}`);
+    }
+    rl.close();
+  } else {
+    const lines = (await readAllStdin()).split('\n');
+    QUESTIONS.forEach(([key], i) => {
+      const answer = (lines[i] || '').trim();
+      if (answer) answers.push(`${key.toUpperCase()}: ${answer}`);
+    });
   }
-  rl.close();
+
   return answers.join('\n') || '(nothing given today)';
 }
 
