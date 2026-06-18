@@ -25,6 +25,6 @@ What Can Wait
 
 Keep it concise and honest. Omit a section's content (but keep the heading, one line: "Nothing flagged today") if there's nothing real to say — do not pad.`;
 
-export function buildUserMessage({ profile, todayContext }) {
-  return `PERMANENT PROFILE:\n${profile}\n\nTODAY'S CONTEXT:\n${todayContext}\n\nGenerate today's Aurora Daily Executive Briefing.`;
+export function buildUserMessage({ profile, todayContext, today }) {
+  return `PERMANENT PROFILE:\n${profile}\n\nTODAY'S DATE: ${today} — use this exact date (and day of week) in the briefing header. Do not guess or infer a different date.\n\nTODAY'S CONTEXT:\n${todayContext}\n\nGenerate today's Aurora Daily Executive Briefing.`;
 }

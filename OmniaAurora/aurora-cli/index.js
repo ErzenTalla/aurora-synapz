@@ -54,6 +54,9 @@ async function main() {
 
   const profile = fs.readFileSync(PROFILE_PATH, 'utf-8');
   const todayContext = await gatherTodayContext();
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10);
+  const today = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5';
@@ -64,7 +67,7 @@ async function main() {
     model,
     max_tokens: 2000,
     system: BRIEFING_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildUserMessage({ profile, todayContext }) }],
+    messages: [{ role: 'user', content: buildUserMessage({ profile, todayContext, today }) }],
   });
 
   const briefing = response.content
@@ -75,7 +78,6 @@ async function main() {
   console.log(briefing);
 
   fs.mkdirSync(BRIEFINGS_DIR, { recursive: true });
-  const date = new Date().toISOString().slice(0, 10);
   const outPath = path.join(BRIEFINGS_DIR, `${date}.md`);
   fs.writeFileSync(outPath, `# Aurora Daily Executive Briefing — ${date}\n\n## Input context\n${todayContext}\n\n## Briefing\n${briefing}\n`);
 
