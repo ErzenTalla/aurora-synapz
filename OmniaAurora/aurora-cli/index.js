@@ -5,19 +5,11 @@ import readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import Anthropic from '@anthropic-ai/sdk';
 import { BRIEFING_SYSTEM_PROMPT, buildUserMessage } from './lib/buildPrompt.js';
+import { QUESTIONS } from './lib/questions.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const PROFILE_PATH = path.join(ROOT, 'context', 'profile.md');
 const BRIEFINGS_DIR = path.join(ROOT, 'daily-briefings');
-
-const QUESTIONS = [
-  ['calendar', "Calendar/today — meetings, appointments, travel?"],
-  ['work', "Work — anything pressing, deadlines, leadership topics?"],
-  ['alpinetech', "AlpineTech — active work, blockers, decisions?"],
-  ['omnia', "Omnia OS / Aurora — anything for this project today?"],
-  ['personal', "Personal — family, health, sleep, anything worth flagging?"],
-  ['concerns', "Concerns — anything uncertain or weighing on you?"],
-];
 
 async function readAllStdin() {
   const chunks = [];

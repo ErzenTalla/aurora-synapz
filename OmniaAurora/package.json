@@ -1,0 +1,11 @@
+{
+  "name": "omnia-aurora-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aurora briefing API — backend for the Aurora iPhone app",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@vercel/blob": "^2.4.1"
+  }
+}
