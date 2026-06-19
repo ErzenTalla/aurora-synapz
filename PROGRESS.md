@@ -121,6 +121,24 @@ User hand-tested the first Step 5 build: **2/5**. Decided to expand from "basics
 
 **Same known gap as before:** couldn't script taps through History/Chat/Profile from this sandbox (no Accessibility automation permission); verified those paths via curl against the real deployed backend instead, plus code-level tracing against the now-confirmed-working endpoints. Full hands-on retest is the user's next step.
 
+### Step 5 fully verified + Phase 1 complete (2026-06-19)
+
+**Real UI automation unlocked:** added an `AuroraUITests` XCUITest target (XCUIApplication driving the actual Simulator — taps, typing, assertions), which doesn't need the Accessibility permission `osascript`-based automation required. This caught two genuine bugs on the first run: the Today flow's "Next" button was disabled while Aurora was still speaking the question (`.disabled(speech.isSpeaking)`), and `SpeechService.speak()` queued rather than interrupted utterances, both fixed. Step 5 is now hand-tested via real, repeatable automation rather than curl + visual inspection alone.
+
+**Phase 1 of `vision/roadmap-v1.md` completed** (iPhone App, Voice+Chat, Notes, Tasks, Knowledge): added Tasks/Notes/Knowledge as a generic Blob-backed CRUD pattern (`aurora-cli/lib/listResource.js`), a new iOS **Workspace** tab, persistent chat history, a daily reminder notification, and a real app icon. Briefing and chat prompts now read this tracked data instead of guessing what's overdue.
+
+**Critical storage bug found and fixed:** Vercel Blob stores created with `access: 'public'` are *always* served from CDN cache with no way to bypass it (the SDK's `useCache: false` option is explicitly "ignored for public blobs") — meaning reads right after a write could silently return stale/empty data. Discovered via real end-to-end verification (planted a task, asked Aurora about it, got "no open tasks" back). Fixed by migrating to a new `private` Blob store + the SDK's authenticated read path — also the more appropriate access level for personal data that never needed a public URL in the first place. All real data (profile, the one saved briefing) was preserved through the migration.
+
+### Phase 2 started — Gmail + Calendar connected (2026-06-19)
+
+Aurora can now read the user's real Gmail (read-only) and Google Calendar (read-only) instead of relying on what gets typed in by hand. OAuth runs server-side (Google Cloud "Web application" client — secret stays on Vercel, never on the phone; refresh token lives in the same private Blob store as everything else). A "Google Account" section in the iOS Profile tab handles connect/disconnect.
+
+Verified end-to-end, not just that the connection succeeded: asked Aurora in chat what was in recent email and on the calendar, and the reply correctly referenced real Aurora Synapz notification emails (from the Step 5 email-notifications work) — proving the context wiring, not just the OAuth handshake.
+
+**Known, accepted limitation:** the OAuth consent screen stays in Google's "Testing" publishing status — pursuing full verification (required for Gmail's "Restricted" scope) would mean weeks of review for an app only one person uses. The real consequence: refresh tokens expire after ~7 days, so reconnecting is one tap in Profile when it lapses.
+
+Project Awareness (the third Phase 2 item — GitHub activity across the `aurora-synapz` and `alpinetechwebsite` repos) is the next planned piece, not yet started.
+
 ---
 
 ## How to use this doc
