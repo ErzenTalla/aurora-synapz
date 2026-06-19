@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { BRIEFING_SYSTEM_PROMPT, buildUserMessage, formatTrackedContext } from '../aurora-cli/lib/buildPrompt.js';
 import { formatTodayContext } from '../aurora-cli/lib/questions.js';
 import { getProfile, saveBriefing, getTrackedContext } from '../aurora-cli/lib/store.js';
+import { getGoogleContext } from '../aurora-cli/lib/google.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -16,7 +17,8 @@ export default async function handler(req, res) {
 
   const profile = await getProfile();
   const todayContext = formatTodayContext(req.body || {});
-  const trackedContext = formatTrackedContext(await getTrackedContext());
+  const googleContext = await getGoogleContext();
+  const trackedContext = formatTrackedContext(await getTrackedContext()) + (googleContext ? `\n\n${googleContext}` : '');
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
   const today = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });

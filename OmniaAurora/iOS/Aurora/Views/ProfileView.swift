@@ -7,6 +7,9 @@ struct ProfileView: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var savedMessage: String?
+    @State private var googleStatus: GoogleStatus?
+    @State private var isCheckingGoogle = false
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NavigationStack {
@@ -15,6 +18,8 @@ struct ProfileView: View {
                     ProgressView().tint(Theme.gold)
                     Spacer()
                 } else {
+                    googleAccountSection
+
                     reminderSection
 
                     TextEditor(text: $text)
@@ -54,7 +59,44 @@ struct ProfileView: View {
             .navigationTitle("Profile")
             .toolbarBackground(Theme.navy, for: .navigationBar)
         }
-        .task { await load() }
+        .task {
+            await load()
+            await checkGoogleStatus()
+        }
+        .onAppear {
+            Task { await checkGoogleStatus() }
+        }
+    }
+
+    private var googleAccountSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Google Account").foregroundStyle(Theme.cream).fontWeight(.medium)
+
+            if isCheckingGoogle {
+                ProgressView().tint(Theme.gold)
+            } else if let googleStatus, googleStatus.connected {
+                Text("Connected as \(googleStatus.email ?? "unknown")")
+                    .font(.caption)
+                    .foregroundStyle(Theme.muted)
+                Button("Disconnect") {
+                    Task { await disconnectGoogle() }
+                }
+                .foregroundStyle(Theme.red)
+            } else {
+                Text("Not connected — Aurora can't see your calendar or email yet.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.muted)
+                Button("Connect Google Account") {
+                    openURL(APIService.shared.googleAuthURL)
+                }
+                .foregroundStyle(Theme.gold)
+            }
+        }
+        .padding()
+        .background(Theme.navy2)
+        .cornerRadius(10)
+        .padding(.horizontal)
+        .padding(.top)
     }
 
     private var reminderSection: some View {
@@ -109,5 +151,16 @@ struct ProfileView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func checkGoogleStatus() async {
+        isCheckingGoogle = true
+        defer { isCheckingGoogle = false }
+        googleStatus = try? await APIService.shared.checkGoogleStatus()
+    }
+
+    private func disconnectGoogle() async {
+        try? await APIService.shared.disconnectGoogle()
+        await checkGoogleStatus()
     }
 }

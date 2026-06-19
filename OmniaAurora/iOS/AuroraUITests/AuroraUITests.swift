@@ -40,6 +40,11 @@ final class AuroraUITests: XCTestCase {
         XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: 8), "Profile tab should show the editable profile text")
         XCTAssertTrue(app.buttons["Save"].exists)
 
+        XCTAssertTrue(app.staticTexts["Google Account"].waitForExistence(timeout: 8), "Profile tab should show the Google Account section")
+        let googleConnected = app.buttons["Disconnect"].waitForExistence(timeout: 5)
+            || app.buttons["Connect Google Account"].waitForExistence(timeout: 1)
+        XCTAssertTrue(googleConnected, "Google Account section should show either a connected or disconnected state")
+
         removeUIInterruptionMonitor(monitor)
     }
 

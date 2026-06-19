@@ -123,6 +123,16 @@ class APIService {
     func deleteKnowledge(id: String) async throws {
         let _: EmptyResponse = try await request("/api/knowledge?id=\(id)", method: "DELETE")
     }
+
+    var googleAuthURL: URL { URL(string: "\(base)/api/google-auth-start")! }
+
+    func checkGoogleStatus() async throws -> GoogleStatus {
+        try await request("/api/google-status", method: "GET")
+    }
+
+    func disconnectGoogle() async throws {
+        let _: EmptyResponse = try await request("/api/google-disconnect", method: "POST")
+    }
 }
 
 struct EmptyResponse: Decodable {}

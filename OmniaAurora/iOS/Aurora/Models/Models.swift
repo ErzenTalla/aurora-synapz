@@ -116,3 +116,8 @@ struct KnowledgeResponse: Decodable {
 struct ChatHistoryResponse: Decodable {
     let messages: [ChatMessage]
 }
+
+struct GoogleStatus: Decodable {
+    let connected: Bool
+    let email: String?
+}
