@@ -21,6 +21,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.omniaos.aurora
         INFOPLIST_FILE: Aurora/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: Aurora/Info.plist
       properties:

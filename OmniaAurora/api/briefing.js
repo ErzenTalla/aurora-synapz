@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { BRIEFING_SYSTEM_PROMPT, buildUserMessage } from '../aurora-cli/lib/buildPrompt.js';
+import { BRIEFING_SYSTEM_PROMPT, buildUserMessage, formatTrackedContext } from '../aurora-cli/lib/buildPrompt.js';
 import { formatTodayContext } from '../aurora-cli/lib/questions.js';
-import { getProfile, saveBriefing } from '../aurora-cli/lib/store.js';
+import { getProfile, saveBriefing, getTrackedContext } from '../aurora-cli/lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -16,6 +16,7 @@ export default async function handler(req, res) {
 
   const profile = await getProfile();
   const todayContext = formatTodayContext(req.body || {});
+  const trackedContext = formatTrackedContext(await getTrackedContext());
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
   const today = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -27,7 +28,7 @@ export default async function handler(req, res) {
     model,
     max_tokens: 2000,
     system: BRIEFING_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildUserMessage({ profile, todayContext, today }) }],
+    messages: [{ role: 'user', content: buildUserMessage({ profile, todayContext, today, trackedContext }) }],
   });
 
   const briefing = response.content

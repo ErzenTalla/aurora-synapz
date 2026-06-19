@@ -14,6 +14,9 @@ struct ContentView: View {
             ChatView()
                 .tabItem { Label("Chat", systemImage: "bubble.left.and.bubble.right.fill") }
 
+            WorkspaceView()
+                .tabItem { Label("Workspace", systemImage: "checklist") }
+
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person.fill") }
         }

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { put, head, list, BlobNotFoundError } from '@vercel/blob';
+import { put, get, list } from '@vercel/blob';
 
 const PROFILE_PATHNAME = 'profile.md';
 const BRIEFINGS_PREFIX = 'daily-briefings/';
@@ -13,26 +13,37 @@ function findProfileSeedPath() {
   return candidates.find((p) => fs.existsSync(p)) || candidates[0];
 }
 
+// Public blobs are always served from CDN cache with no way to bypass it
+// (useCache is "ignored for public blobs" per the SDK) — read-after-write was
+// returning stale content. Private blobs + useCache:false fetch straight from
+// origin storage every time, and it's the more appropriate access level for
+// personal data anyway (profile, tasks, notes — none of this should be a
+// guessable public URL).
+async function readBlobText(pathname) {
+  const result = await get(pathname, { access: 'private', useCache: false });
+  if (!result) return null;
+  return await new Response(result.stream).text();
+}
+
+async function writeBlob(pathname, content, contentType) {
+  await put(pathname, content, {
+    access: 'private',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType,
+  });
+}
+
 export async function getProfile() {
-  try {
-    const meta = await head(PROFILE_PATHNAME);
-    const res = await fetch(meta.url);
-    return await res.text();
-  } catch (err) {
-    if (!(err instanceof BlobNotFoundError)) throw err;
-    const seed = fs.readFileSync(findProfileSeedPath(), 'utf-8');
-    await saveProfile(seed);
-    return seed;
-  }
+  const text = await readBlobText(PROFILE_PATHNAME);
+  if (text !== null) return text;
+  const seed = fs.readFileSync(findProfileSeedPath(), 'utf-8');
+  await saveProfile(seed);
+  return seed;
 }
 
 export async function saveProfile(content) {
-  await put(PROFILE_PATHNAME, content, {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: 'text/markdown',
-  });
+  await writeBlob(PROFILE_PATHNAME, content, 'text/markdown');
 }
 
 export async function listBriefings() {
@@ -46,9 +57,9 @@ export async function listBriefings() {
 }
 
 export async function getBriefing(date) {
-  const meta = await head(`${BRIEFINGS_PREFIX}${date}.md`);
-  const res = await fetch(meta.url);
-  return await res.text();
+  const text = await readBlobText(`${BRIEFINGS_PREFIX}${date}.md`);
+  if (text === null) throw new Error(`No briefing found for ${date}`);
+  return text;
 }
 
 export function extractBriefingText(savedFileContent) {
@@ -58,10 +69,25 @@ export function extractBriefingText(savedFileContent) {
 }
 
 export async function saveBriefing(date, content) {
-  await put(`${BRIEFINGS_PREFIX}${date}.md`, content, {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: 'text/markdown',
-  });
+  await writeBlob(`${BRIEFINGS_PREFIX}${date}.md`, content, 'text/markdown');
+}
+
+export async function getJSON(pathname, fallback) {
+  const text = await readBlobText(pathname);
+  if (text !== null) return JSON.parse(text);
+  await saveJSON(pathname, fallback);
+  return fallback;
+}
+
+export async function saveJSON(pathname, data) {
+  await writeBlob(pathname, JSON.stringify(data, null, 2), 'application/json');
+}
+
+export async function getTrackedContext() {
+  const [{ tasks }, { notes }, { facts }] = await Promise.all([
+    getJSON('tasks.json', { tasks: [] }),
+    getJSON('notes.json', { notes: [] }),
+    getJSON('knowledge.json', { facts: [] }),
+  ]);
+  return { tasks, notes, facts };
 }

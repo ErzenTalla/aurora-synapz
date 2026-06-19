@@ -25,8 +25,23 @@ What Can Wait
 
 Keep it concise and honest. Omit a section's content (but keep the heading, one line: "Nothing flagged today") if there's nothing real to say — do not pad.`;
 
-export function buildUserMessage({ profile, todayContext, today }) {
-  return `PERMANENT PROFILE:\n${profile}\n\nTODAY'S DATE: ${today} — use this exact date (and day of week) in the briefing header. Do not guess or infer a different date.\n\nTODAY'S CONTEXT:\n${todayContext}\n\nGenerate today's Aurora Daily Executive Briefing.`;
+export function formatTrackedContext({ tasks, notes, facts }) {
+  const openTasks = tasks.filter((t) => t.status === 'open');
+  const recentNotes = notes.slice(-10).reverse();
+
+  const taskLines = openTasks.length
+    ? openTasks.map((t) => `- [${t.domain || 'general'}] ${t.text} (added ${t.createdAt.slice(0, 10)})`).join('\n')
+    : '(none)';
+  const noteLines = recentNotes.length
+    ? recentNotes.map((n) => `- [${n.domain || 'general'}] ${n.text}`).join('\n')
+    : '(none)';
+  const factLines = facts.length ? facts.map((f) => `- ${f.text}`).join('\n') : '(none)';
+
+  return `OPEN TASKS (real, tracked — use this instead of guessing what's overdue):\n${taskLines}\n\nRECENT NOTES:\n${noteLines}\n\nKNOWN FACTS:\n${factLines}`;
+}
+
+export function buildUserMessage({ profile, todayContext, today, trackedContext }) {
+  return `PERMANENT PROFILE:\n${profile}\n\nTODAY'S DATE: ${today} — use this exact date (and day of week) in the briefing header. Do not guess or infer a different date.\n\n${trackedContext}\n\nTODAY'S CONTEXT:\n${todayContext}\n\nGenerate today's Aurora Daily Executive Briefing.`;
 }
 
 export const CHAT_SYSTEM_PROMPT = `You are Aurora — chief of staff, executive assistant, strategic advisor, and life/work coordinator.

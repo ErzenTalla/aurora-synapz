@@ -11,12 +11,15 @@
 		13DFE051705A1D43CD8F208A /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB50E47F031892B2110D229 /* ProfileView.swift */; };
 		192AA87F88728E73D2319168 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3917FFF546F3AB1C857AD9DE /* ChatView.swift */; };
 		1C05EDF02A1B14B8950940A9 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9F99E547CF2ADEC0738C47 /* Models.swift */; };
+		2179E83A37938E3D4AF5FC98 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC054F4CE6C3B2DD2A3BC124 /* NotificationService.swift */; };
 		270C84FA94032131F6E32DBC /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF25EAF64D05F3435EF670CB /* HistoryView.swift */; };
 		3F1A03FCA733452231D74C41 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F87F7BCB8984E4E2277B69F /* Theme.swift */; };
+		55EFD526D7FA3E4497CE4ECB /* WorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1254852BFF23442477C264F /* WorkspaceView.swift */; };
 		942CE6783C632D9B6C8F58ED /* AuroraUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2736024F981FD786A9917885 /* AuroraUITests.swift */; };
 		98DD428BABF2BDAF3017772E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A41F303E13BD97E90A9C28 /* ContentView.swift */; };
 		AFAD1E7D0BE0E83BA15F5D54 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264CCE51B59F551D49FFEC5B /* APIService.swift */; };
 		B0BCEF968285E49859BFDDA3 /* AuroraApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCB3719991A6FFE9C5EE651F /* AuroraApp.swift */; };
+		BCF6FFCBEE0DFA56E06A8745 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C732C89706CCBFB9251723B /* Assets.xcassets */; };
 		FA6B2694000DC581BE6FDF51 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7559C80B3AE39F96FEF0110C /* TodayView.swift */; };
 /* End PBXBuildFile section */
 
@@ -35,6 +38,7 @@
 		264CCE51B59F551D49FFEC5B /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
 		2736024F981FD786A9917885 /* AuroraUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraUITests.swift; sourceTree = "<group>"; };
 		3917FFF546F3AB1C857AD9DE /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		5C732C89706CCBFB9251723B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6F87F7BCB8984E4E2277B69F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7559C80B3AE39F96FEF0110C /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		7704630A5B5C7ED5B04039B0 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
@@ -42,8 +46,10 @@
 		8DB50E47F031892B2110D229 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		A078D712EDB91254FB4C65EB /* Aurora.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Aurora.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AADC563D80995D808A6C7C77 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CC054F4CE6C3B2DD2A3BC124 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		CCB3719991A6FFE9C5EE651F /* AuroraApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraApp.swift; sourceTree = "<group>"; };
 		DF25EAF64D05F3435EF670CB /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		E1254852BFF23442477C264F /* WorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceView.swift; sourceTree = "<group>"; };
 		EB9F99E547CF2ADEC0738C47 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -51,6 +57,7 @@
 		000AB1D6A3A873FB102548D0 /* Aurora */ = {
 			isa = PBXGroup;
 			children = (
+				5C732C89706CCBFB9251723B /* Assets.xcassets */,
 				CCB3719991A6FFE9C5EE651F /* AuroraApp.swift */,
 				AADC563D80995D808A6C7C77 /* Info.plist */,
 				B684F93576880BE1739D6916 /* Models */,
@@ -90,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				264CCE51B59F551D49FFEC5B /* APIService.swift */,
+				CC054F4CE6C3B2DD2A3BC124 /* NotificationService.swift */,
 				7704630A5B5C7ED5B04039B0 /* SpeechService.swift */,
 			);
 			path = Services;
@@ -120,6 +128,7 @@
 				DF25EAF64D05F3435EF670CB /* HistoryView.swift */,
 				8DB50E47F031892B2110D229 /* ProfileView.swift */,
 				7559C80B3AE39F96FEF0110C /* TodayView.swift */,
+				E1254852BFF23442477C264F /* WorkspaceView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -132,6 +141,7 @@
 			buildConfigurationList = 111A2FF3D7DAB9D1609BBB2E /* Build configuration list for PBXNativeTarget "Aurora" */;
 			buildPhases = (
 				11EAC339E4E4F6AC6B9348CE /* Sources */,
+				241DE0C963712677DAD39C8A /* Resources */,
 			);
 			buildRules = (
 			);
@@ -196,6 +206,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		241DE0C963712677DAD39C8A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BCF6FFCBEE0DFA56E06A8745 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		11EAC339E4E4F6AC6B9348CE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -207,10 +228,12 @@
 				98DD428BABF2BDAF3017772E /* ContentView.swift in Sources */,
 				270C84FA94032131F6E32DBC /* HistoryView.swift in Sources */,
 				1C05EDF02A1B14B8950940A9 /* Models.swift in Sources */,
+				2179E83A37938E3D4AF5FC98 /* NotificationService.swift in Sources */,
 				13DFE051705A1D43CD8F208A /* ProfileView.swift in Sources */,
 				02B7AF402C3438D4683A3B81 /* SpeechService.swift in Sources */,
 				3F1A03FCA733452231D74C41 /* Theme.swift in Sources */,
 				FA6B2694000DC581BE6FDF51 /* TodayView.swift in Sources */,
+				55EFD526D7FA3E4497CE4ECB /* WorkspaceView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { CHAT_SYSTEM_PROMPT } from '../aurora-cli/lib/buildPrompt.js';
-import { getProfile } from '../aurora-cli/lib/store.js';
+import { CHAT_SYSTEM_PROMPT, formatTrackedContext } from '../aurora-cli/lib/buildPrompt.js';
+import { getProfile, getTrackedContext } from '../aurora-cli/lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -20,10 +20,11 @@ export default async function handler(req, res) {
   }
 
   const profile = await getProfile();
+  const trackedContext = formatTrackedContext(await getTrackedContext());
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5';
 
-  const system = `${CHAT_SYSTEM_PROMPT}\n\nPERMANENT PROFILE:\n${profile}\n\nTHE BRIEFING YOU GAVE ON ${briefingDate || 'an earlier day'}:\n${briefingText || '(not provided)'}`;
+  const system = `${CHAT_SYSTEM_PROMPT}\n\nPERMANENT PROFILE:\n${profile}\n\n${trackedContext}\n\nTHE BRIEFING YOU GAVE ON ${briefingDate || 'an earlier day'}:\n${briefingText || '(not provided)'}`;
 
   const response = await client.messages.create({
     model,

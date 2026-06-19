@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @StateObject private var notifications = NotificationService.shared
     @State private var text = ""
     @State private var isLoading = true
     @State private var isSaving = false
@@ -14,6 +15,8 @@ struct ProfileView: View {
                     ProgressView().tint(Theme.gold)
                     Spacer()
                 } else {
+                    reminderSection
+
                     TextEditor(text: $text)
                         .scrollContentBackground(.hidden)
                         .foregroundStyle(Theme.cream)
@@ -52,6 +55,36 @@ struct ProfileView: View {
             .toolbarBackground(Theme.navy, for: .navigationBar)
         }
         .task { await load() }
+    }
+
+    private var reminderSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: Binding(
+                get: { notifications.isEnabled },
+                set: { newValue in Task { await notifications.setEnabled(newValue) } }
+            )) {
+                Text("Daily Reminder").foregroundStyle(Theme.cream)
+            }
+            .tint(Theme.gold)
+
+            if notifications.isEnabled {
+                DatePicker(
+                    "Reminder time",
+                    selection: Binding(
+                        get: { notifications.time },
+                        set: { notifications.updateTime($0) }
+                    ),
+                    displayedComponents: .hourAndMinute
+                )
+                .datePickerStyle(.compact)
+                .foregroundStyle(Theme.cream)
+            }
+        }
+        .padding()
+        .background(Theme.navy2)
+        .cornerRadius(10)
+        .padding(.horizontal)
+        .padding(.top)
     }
 
     private func load() async {

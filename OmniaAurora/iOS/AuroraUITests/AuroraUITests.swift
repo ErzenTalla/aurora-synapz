@@ -64,4 +64,47 @@ final class AuroraUITests: XCTestCase {
 
         removeUIInterruptionMonitor(monitor)
     }
+
+    func testWorkspaceAddCompleteDeleteTask() throws {
+        let app = XCUIApplication()
+        let monitor = addPermissionAllowMonitor()
+        app.launch()
+
+        app.tabBars.buttons["Workspace"].tap()
+        app.tap()
+
+        let addButton = app.navigationBars.buttons["plus"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 8), "Workspace should show an add button once Tasks have loaded")
+        addButton.tap()
+
+        let taskText = "UITest task \(Int(Date().timeIntervalSince1970))"
+        let textField = app.textFields["What's on your mind?"]
+        XCTAssertTrue(textField.waitForExistence(timeout: 5))
+        textField.tap()
+        textField.typeText(taskText)
+
+        app.buttons["Add"].tap()
+
+        let taskRow = app.staticTexts[taskText]
+        XCTAssertTrue(taskRow.waitForExistence(timeout: 8), "Newly added task should appear in the list")
+
+        taskRow.tap()
+
+        taskRow.swipeLeft()
+        let deleteButton = app.buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5))
+        deleteButton.tap()
+
+        XCTAssertTrue(taskRow.waitForNonExistence(timeout: 8), "Deleted task should disappear from the list")
+
+        removeUIInterruptionMonitor(monitor)
+    }
+}
+
+extension XCUIElement {
+    func waitForNonExistence(timeout: TimeInterval) -> Bool {
+        let predicate = NSPredicate(format: "exists == false")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: self)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
 }

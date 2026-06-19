@@ -70,4 +70,59 @@ class APIService {
         let reply: ChatReply = try await request("/api/chat", method: "POST", body: body)
         return reply.reply
     }
+
+    func fetchChatHistory(date: String) async throws -> [ChatMessage] {
+        let response: ChatHistoryResponse = try await request("/api/chat-history?date=\(date)", method: "GET")
+        return response.messages
+    }
+
+    func saveChatHistory(date: String, messages: [ChatMessage]) async throws {
+        let body: [String: Any] = ["messages": messages.map { ["role": $0.role.rawValue, "content": $0.content] }]
+        let _: ChatHistoryResponse = try await request("/api/chat-history?date=\(date)", method: "POST", body: body)
+    }
+
+    func listTasks() async throws -> [TaskItem] {
+        let response: TasksResponse = try await request("/api/tasks", method: "GET")
+        return response.tasks
+    }
+
+    func addTask(text: String, domain: String) async throws -> TaskItem {
+        try await request("/api/tasks", method: "POST", body: ["text": text, "domain": domain, "status": "open"])
+    }
+
+    func setTaskStatus(id: String, status: String) async throws -> TaskItem {
+        try await request("/api/tasks?id=\(id)", method: "PATCH", body: ["status": status])
+    }
+
+    func deleteTask(id: String) async throws {
+        let _: EmptyResponse = try await request("/api/tasks?id=\(id)", method: "DELETE")
+    }
+
+    func listNotes() async throws -> [NoteItem] {
+        let response: NotesResponse = try await request("/api/notes", method: "GET")
+        return response.notes
+    }
+
+    func addNote(text: String, domain: String) async throws -> NoteItem {
+        try await request("/api/notes", method: "POST", body: ["text": text, "domain": domain])
+    }
+
+    func deleteNote(id: String) async throws {
+        let _: EmptyResponse = try await request("/api/notes?id=\(id)", method: "DELETE")
+    }
+
+    func listKnowledge() async throws -> [KnowledgeFact] {
+        let response: KnowledgeResponse = try await request("/api/knowledge", method: "GET")
+        return response.facts
+    }
+
+    func addKnowledge(text: String) async throws -> KnowledgeFact {
+        try await request("/api/knowledge", method: "POST", body: ["text": text])
+    }
+
+    func deleteKnowledge(id: String) async throws {
+        let _: EmptyResponse = try await request("/api/knowledge?id=\(id)", method: "DELETE")
+    }
 }
+
+struct EmptyResponse: Decodable {}

@@ -98,11 +98,17 @@ struct ChatView: View {
         try? speech.startRecording()
     }
 
+    private var todayDateString: String {
+        String(ISO8601DateFormatter().string(from: Date()).prefix(10))
+    }
+
     private func loadTodaysBriefing() async {
         isLoadingBriefing = true
         defer { isLoadingBriefing = false }
-        let today = ISO8601DateFormatter().string(from: Date()).prefix(10)
-        todaysBriefing = try? await APIService.shared.fetchBriefing(date: String(today))
+        todaysBriefing = try? await APIService.shared.fetchBriefing(date: todayDateString)
+        if todaysBriefing != nil {
+            messages = (try? await APIService.shared.fetchChatHistory(date: todayDateString)) ?? []
+        }
     }
 
     private func send() async {
@@ -126,6 +132,7 @@ struct ChatView: View {
             )
             messages.append(ChatMessage(role: .assistant, content: reply))
             speech.speak(reply)
+            try? await APIService.shared.saveChatHistory(date: todayDateString, messages: messages)
         } catch {
             errorMessage = error.localizedDescription
         }

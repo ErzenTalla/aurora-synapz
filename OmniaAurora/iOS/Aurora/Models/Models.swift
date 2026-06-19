@@ -41,6 +41,21 @@ struct ChatMessage: Codable, Identifiable, Equatable {
         self.role = role
         self.content = content
     }
+
+    enum CodingKeys: String, CodingKey { case role, content }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID()
+        self.role = try container.decode(Role.self, forKey: .role)
+        self.content = try container.decode(String.self, forKey: .content)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(role, forKey: .role)
+        try container.encode(content, forKey: .content)
+    }
 }
 
 struct ChatReply: Decodable {
@@ -49,4 +64,55 @@ struct ChatReply: Decodable {
 
 struct ProfileResponse: Decodable {
     let profile: String
+}
+
+enum Domain: String, CaseIterable, Identifiable, Codable {
+    case alpinetech, aurorasynapz, omnia, personal, general
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .alpinetech: return "AlpineTech"
+        case .aurorasynapz: return "Aurora Synapz"
+        case .omnia: return "Omnia OS"
+        case .personal: return "Personal"
+        case .general: return "General"
+        }
+    }
+}
+
+struct TaskItem: Codable, Identifiable, Equatable {
+    let id: String
+    let text: String
+    let domain: String?
+    var status: String
+    let createdAt: String
+}
+
+struct TasksResponse: Decodable {
+    let tasks: [TaskItem]
+}
+
+struct NoteItem: Codable, Identifiable, Equatable {
+    let id: String
+    let text: String
+    let domain: String?
+    let createdAt: String
+}
+
+struct NotesResponse: Decodable {
+    let notes: [NoteItem]
+}
+
+struct KnowledgeFact: Codable, Identifiable, Equatable {
+    let id: String
+    let text: String
+    let createdAt: String
+}
+
+struct KnowledgeResponse: Decodable {
+    let facts: [KnowledgeFact]
+}
+
+struct ChatHistoryResponse: Decodable {
+    let messages: [ChatMessage]
 }
