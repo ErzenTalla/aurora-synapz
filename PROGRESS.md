@@ -243,6 +243,12 @@ No iOS changes — GitHub access here is a static server-side token, not per-use
 
 **Phase 2 is now fully complete** (Email, Calendar, Project Awareness). Next up per `vision/roadmap-v1.md`: Phase 3 (Agent Orchestration, Workflow Execution).
 
+### Session close (2026-06-20) — Phase 3 starting point decided, not yet built
+
+Stopping for today with Phase 2 fully shipped. Phase 3's roadmap entries (Agent Orchestration, Workflow Execution) are still just headings — no detailed spec exists yet, and it's a real architectural jump: everything built in Phases 1-2 is read-only (tasks/notes/knowledge, Gmail, calendar, GitHub), while Phase 3 is where Aurora starts actually doing things.
+
+**Decided starting point for next session:** rather than jumping straight into multi-agent orchestration or full workflow execution, start Phase 3 with one small, explicitly-confirmed write action through chat — e.g. "add this as a task" triggers the existing Tasks API (`api/tasks.js`), but only after Aurora repeats the action back and the user confirms. This also closes out the original (pre-Phase-1/2) MVP roadmap's still-pending "Step 6: first confirmed write action," and follows architecture principle #4, "Human Approval for Sensitive Actions" (`vision/architecture-principles-v1.md`). Not yet scoped in detail or built — pick this up next session.
+
 ---
 
 ## How to use this doc
