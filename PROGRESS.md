@@ -23,7 +23,8 @@ Live at: https://aurorasyanapz.com
 | 7 | Live Alpaca account | ✅ Done (2026-06-19) — live keys wired in, account verified ACTIVE, $0 funded so far |
 | 8 | Manual (wire) deposit requests + admin Invest button | ✅ Done (2026-06-19) — bypasses Stripe for family-only use while Step 6 is blocked |
 | 9 | iOS app: full client+admin parity + App Store readiness | 🚧 In progress (2026-06-19/20) — see below, code complete for Phases A-D, verification partially done |
-| 10 | Production end-to-end verification (web) + App Store prep | 🚧 In progress (2026-06-20) — web E2E done, iOS click-through next |
+| 10 | Production end-to-end verification (web + iOS) | ✅ Done (2026-06-20) — see below |
+| 11 | App Store submission | 🚧 Not started — blocked on user's Apple Developer enrollment, see checklist below |
 
 ### Step 10 — production E2E verification, App Store + social media prep (2026-06-20)
 
@@ -53,6 +54,33 @@ iOS XCUITest target added (`AuroraSyanapzUITests`, mirrors the pattern from the 
 - Full suite (38 unit tests + 9 UI tests) run together as a final check.
 
 App Store submission itself still needs the user's Apple Developer account (Phase F, unchanged from Step 9). Social media announcement deliberately held until after App Store approval per user's decision.
+
+**Step 10 closed out 2026-06-20.** Disposable test client (`user_id` 8, then 9 after recreation) deleted from production each time; no test data left behind. All code pushed to `origin/master` (commits `150089b`, `b1f2fff`).
+
+### Step 11 — App Store submission checklist (next session starts here, as of 2026-06-20)
+
+**Already done (code side):**
+- Full client + admin feature parity, 38 unit tests + 9 UI tests (`AuroraSyanapzUITests`) passing against production
+- Privacy manifest (`PrivacyInfo.xcprivacy`)
+- Privacy policy live at `https://aurorasyanapz.com/privacy.html`
+- Face ID app-lock, Keychain-based auth
+- App icon present (`Assets.xcassets/AppIcon.appiconset/AppIcon.png`)
+- Bundle ID `com.aurorasyanapz.app`, version `1.0.0 (1)`
+
+**Left — all gated on the user's Apple ID / Developer account:**
+1. Apple Developer Program enrollment ($99/yr) — blocks everything below.
+2. Xcode signing Team — `DEVELOPMENT_TEAM` is not set anywhere in `project.yml`/`project.pbxproj` right now; this is the actual "won't archive" blocker. User can give Claude the Team ID to wire into `project.yml` once enrolled, or set it directly in Xcode.
+3. App Store Connect: reserve the bundle ID, create the app record.
+4. Screenshots — Claude can generate these via the Simulator/XCUITest setup once signing works.
+5. Listing copy (name, subtitle, description, keywords, support URL) — Claude can draft on request, doesn't need to wait for enrollment.
+6. App Privacy questionnaire in App Store Connect — straightforward, maps directly from `PrivacyInfo.xcprivacy`.
+7. Export compliance — almost certainly "no" (HTTPS only, no custom crypto).
+8. Age rating questionnaire.
+9. Pricing (free) / availability (countries).
+10. Archive + upload build (Xcode or `xcodebuild archive` + Transporter) — needs signing Team set first.
+11. Submit for review.
+
+Social media announcement stays held until after App Store approval (user's call, 2026-06-20).
 
 ### Also fixed along the way
 - Vercel cron for nightly Alpaca sync was silently 404'ing (POST route vs GET-only cron) — fixed, now `GET /api/alpaca/cron-sync`.
