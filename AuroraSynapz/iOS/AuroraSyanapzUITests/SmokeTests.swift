@@ -8,6 +8,7 @@ final class SmokeTests: XCTestCase {
     func testAppLaunchesToLoginScreen() throws {
         let app = XCUIApplication()
         app.launch()
+        app.signOutIfNeeded()
         XCTAssertTrue(app.staticTexts["Welcome Back"].waitForExistence(timeout: 5))
     }
 }

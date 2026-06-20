@@ -33,6 +33,7 @@
 		B4457B55F8C0B1324E83CA24 /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68ED394057DCBABAE99117DB /* SharedViews.swift */; };
 		B7F4373910403D80468C50AC /* AdminContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3CE91BE02AD74C6BC89E63 /* AdminContactsView.swift */; };
 		BE594A24CCD14B7A86C782B0 /* AuroraSyanapzApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B062F26BFA16F31F9C929293 /* AuroraSyanapzApp.swift */; };
+		CA928ECB1AC64648D72156ED /* UITestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF4F3BB36DA12D3D24B2E95C /* UITestHelpers.swift */; };
 		D43FC98A45EE4391379F649E /* AdminFeeManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B544320561474F424E05D9F7 /* AdminFeeManagementView.swift */; };
 		D71841FCB360158D5709325A /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 653C5B641AE70C5A2188D78B /* Models.swift */; };
 		D8283FD6C2CC04780B1146A0 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D89E253A521437480B10C52 /* ThemeTests.swift */; };
@@ -101,6 +102,7 @@
 		F1E6FC3F90385E5DA08DAC27 /* AuthStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStoreTests.swift; sourceTree = "<group>"; };
 		F5111E338D82D8C5376573FF /* LockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockView.swift; sourceTree = "<group>"; };
 		FE8EFCF75A1E0273EDE44B10 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
+		FF4F3BB36DA12D3D24B2E95C /* UITestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestHelpers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -125,6 +127,7 @@
 				9841CC871B8A382F02DA3FB8 /* AdminFlowTests.swift */,
 				1482B10448490A9F190421DF /* ClientFlowTests.swift */,
 				B54BD780E3934A75532631F4 /* SmokeTests.swift */,
+				FF4F3BB36DA12D3D24B2E95C /* UITestHelpers.swift */,
 			);
 			path = AuroraSyanapzUITests;
 			sourceTree = "<group>";
@@ -357,6 +360,7 @@
 				053955CEA52157F2F7E7B2EB /* AdminFlowTests.swift in Sources */,
 				95A575451090DCD55827D2BA /* ClientFlowTests.swift in Sources */,
 				727041AB4A51B69441AF5FAA /* SmokeTests.swift in Sources */,
+				CA928ECB1AC64648D72156ED /* UITestHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
