@@ -46,3 +46,28 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aurorasyanapz.tests
         GENERATE_INFOPLIST_FILE: YES
+
+  AuroraSyanapzUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - AuroraSyanapzUITests
+    dependencies:
+      - target: AuroraSyanapz
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aurorasyanapz.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: AuroraSyanapz
+
+schemes:
+  AuroraSyanapz:
+    build:
+      targets:
+        AuroraSyanapz: all
+        AuroraSyanapzTests: [test]
+        AuroraSyanapzUITests: [test]
+    test:
+      targets:
+        - AuroraSyanapzTests
+        - AuroraSyanapzUITests

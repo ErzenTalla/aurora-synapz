@@ -23,6 +23,36 @@ Live at: https://aurorasyanapz.com
 | 7 | Live Alpaca account | ✅ Done (2026-06-19) — live keys wired in, account verified ACTIVE, $0 funded so far |
 | 8 | Manual (wire) deposit requests + admin Invest button | ✅ Done (2026-06-19) — bypasses Stripe for family-only use while Step 6 is blocked |
 | 9 | iOS app: full client+admin parity + App Store readiness | 🚧 In progress (2026-06-19/20) — see below, code complete for Phases A-D, verification partially done |
+| 10 | Production end-to-end verification (web) + App Store prep | 🚧 In progress (2026-06-20) — web E2E done, iOS click-through next |
+
+### Step 10 — production E2E verification, App Store + social media prep (2026-06-20)
+
+Goal: verify the whole platform actually works on production before submitting the iOS app to the App Store and announcing anything publicly. Plan agreed with user: web E2E first, then add iOS UI tests (XCUITest) to finally close the "never tapped through the new screens" gap from Step 9, then App Store checklist, with social media held until after App Store approval.
+
+**Critical bug found and fixed:** querying the live fund state before testing revealed `fund.total_units = 100001.35` (leftover paper-trading-era test units on the admin's own account, from before the Step 7 live-Alpaca cutover) while `fund.total_value = $0` (correctly synced from the now-live, unfunded Alpaca account). This meant `unit_price = 0/100001.35 = 0`, so **any real deposit confirmation right now would divide by zero** (`amount / unitPrice` → `Infinity`, rejected by Postgres) — this would have broken the Step 8 Wire Deposit feature for actual family clients, not just a test. Fixed by resetting the admin's phantom units and the fund table to the documented bootstrap state (`total_units=0, total_value=0, unit_price=1.0`) via a direct one-off Neon connection (`.env.local`'s `DATABASE_URL`) — zero impact on James Hartwell/demo's legacy `$1,247,830.54` (separate field, `units_owned=0`, untouched) or Endrit/Blerina (never had a confirmed deposit).
+
+**Web E2E verified on production (after the fix), real money-equivalent round trip:**
+- Submitted a real $100 Wire Deposit request as a logged-in user → admin Mark Received → confirmed fund/portfolio correctly went `$0/0 units` → `$100/100 units` at `$1.00/unit`.
+- Submitted a $100 withdrawal (the documented $100 minimum) → confirmed immediate deduction back to `$0/0 units` → admin marked it `processed` → full admin lifecycle (pending → processed) exercised, not just reject.
+- Net result: fund and portfolio both back to the same `$0/0` baseline as before the test — no residual value.
+- Document upload/download: admin uploaded a real PDF for a client, client downloaded it byte-for-byte identical, cross-user download attempt correctly 404'd, test document deleted afterward.
+- Fee preview: correctly returns `{collected: 0, clients: []}` right now since no client currently holds fund units — confirmed this is the `totalUnits <= 0` short-circuit in `collectFees()` working as designed, not a bug.
+- Contact form: submitted and confirmed it lands in `/api/admin/contacts` (note: route expects `first_name`/`last_name`, not a single `name` field) and triggers the real notification email. No delete endpoint exists for contacts, so this test entry stays in the admin list (clearly labeled, harmless).
+
+**Second critical bug found and fixed:** while preparing an iOS test client, found that `POST /api/admin/users` (the "Add Client" button) never created a matching `portfolios` row — only inserts into `users`. `GET /api/portal/overview` correctly 404s with no portfolio (`routes/portal.js:26`), but `dashboard.html`'s `loadOverview()` has no error handling around that call, so **the client dashboard was actually broken for Endrit and Blerina, your two real family clients, right now** (confirmed via direct DB query: only `user_id` 1 and 3 — demo and admin — had portfolio rows). Fixed by inserting a default `portfolios` row immediately after user creation (`routes/admin.js:99`, every column already defaults to 0 so it's a one-line insert), backfilled the missing rows for Endrit and Blerina directly via Neon, deployed to production, and verified via a disposable test client (`e2e-ios-test@aurorasyanapz.com`, created/will be deleted via the API) that `/api/portal/overview` now returns `200` instead of `404` immediately after client creation.
+
+iOS XCUITest target added (`AuroraSyanapzUITests`, mirrors the pattern from the Omnia Aurora iOS app — `bundle.ui-testing` target type, wired into the `AuroraSyanapz` scheme's test action via an explicit `schemes:` block in `project.yml`). Smoke test (`testAppLaunchesToLoginScreen`) passes in Simulator, confirming this sandbox **can** drive real UI taps/assertions for this app — closing the gap flagged in Step 9 ("no XCUITest target ... Accessibility automation not allowed").
+
+**Third bug found and fixed** while writing the client UI tests: the Overview tab crashed with a generic "The data couldn't be read because it is missing" error for any client with `total_value = 0` (i.e. every brand-new client before their first deposit — this currently includes Endrit and Blerina). Root cause: `routes/portal.js`'s `/allocation` endpoint computes `pct: Math.round((value / total) * 10000) / 100` with no zero-guard — `0/0` is `NaN`, which `JSON.stringify` silently serializes as `null`, and the iOS `AllocationItem.pct` field is a non-optional `Double`, so decoding throws. Fixed with a `total > 0 ? ... : 0` guard, deployed, verified the API now returns `"pct":0` instead of `null` and the Overview tab loads cleanly.
+
+**Fourth bug found and fixed:** `DELETE /api/admin/users/:id` never cleaned up `deposit_requests`/`withdrawal_requests` rows, so deleting any client with deposit/withdrawal history (e.g. the disposable test client created for these UI tests) failed with a foreign-key violation. Added the two missing `DELETE` statements to match the existing cleanup pattern, deployed, verified by successfully deleting the test client afterward.
+
+**iOS UI flow tests — all passing on real Simulator taps against the live production API:**
+- Client (`ClientFlowTests`, as a disposable test client created/deleted via the admin API): login, submit a Wire Deposit request and see it appear in history, attempt an over-balance Withdraw and see the correct client-side validation error, Documents tab empty state, Account tab Face ID toggle.
+- Admin (`AdminFlowTests`, real admin login): Deposit Requests screen (+ Invest panel) loads with live data, Withdrawals screen loads, Fee Management screen loads (preview + client rates), Documents screen loads and the upload sheet opens/cancels correctly.
+- Full suite (38 unit tests + 9 UI tests) run together as a final check.
+
+App Store submission itself still needs the user's Apple Developer account (Phase F, unchanged from Step 9). Social media announcement deliberately held until after App Store approval per user's decision.
 
 ### Also fixed along the way
 - Vercel cron for nightly Alpaca sync was silently 404'ing (POST route vs GET-only cron) — fixed, now `GET /api/alpaca/cron-sync`.

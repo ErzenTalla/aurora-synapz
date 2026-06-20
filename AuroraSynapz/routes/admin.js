@@ -101,6 +101,8 @@ router.post('/users', async (req, res) => {
        VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, created_at`,
       [name, email.toLowerCase().trim(), hash, role]
     );
+    // Every client needs a portfolio row or the portal dashboard 404s on load.
+    await db.query(`INSERT INTO portfolios (user_id) VALUES ($1)`, [user.id]);
     res.status(201).json(user);
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'Email already in use' });
@@ -142,6 +144,8 @@ router.delete('/users/:id', async (req, res) => {
     await db.query('DELETE FROM documents           WHERE user_id = $1', [uid]);
     await db.query('DELETE FROM transactions        WHERE user_id = $1', [uid]);
     await db.query('DELETE FROM holdings            WHERE user_id = $1', [uid]);
+    await db.query('DELETE FROM deposit_requests    WHERE user_id = $1', [uid]);
+    await db.query('DELETE FROM withdrawal_requests WHERE user_id = $1', [uid]);
     await db.query('DELETE FROM portfolios          WHERE user_id = $1', [uid]);
     await db.query('DELETE FROM alpaca_sync_log     WHERE user_id = $1', [uid]);
     await db.query('DELETE FROM stripe_payments     WHERE user_id = $1', [uid]);

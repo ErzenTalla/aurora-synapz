@@ -111,7 +111,7 @@ router.get('/allocation', async (req, res) => {
     const allocation = Object.entries(buckets).map(([label, value]) => ({
       label,
       value: Math.round(value * 100) / 100,
-      pct:   Math.round((value / total) * 10000) / 100,
+      pct:   total > 0 ? Math.round((value / total) * 10000) / 100 : 0,
     }));
     res.json(allocation);
   } catch (err) {

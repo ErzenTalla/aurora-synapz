@@ -3,7 +3,17 @@
     "allow": [
       "Bash(npm --version)",
       "Bash(npm install *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(curl *aurorasyanapz.com*)",
+      "Bash(xcodebuild *)",
+      "Bash(xcodegen *)",
+      "Bash(vercel logs *)",
+      "Bash(vercel inspect *)",
+      "Bash(vercel ls*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(xcrun simctl *)"
     ]
   }
 }
