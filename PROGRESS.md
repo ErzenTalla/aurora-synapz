@@ -229,6 +229,20 @@ Verified end-to-end, not just that the connection succeeded: asked Aurora in cha
 
 Project Awareness (the third Phase 2 item — GitHub activity across the `aurora-synapz` and `alpinetechwebsite` repos) is the next planned piece, not yet started.
 
+### Phase 2 complete — Project Awareness (GitHub) connected (2026-06-20)
+
+Aurora now reads real GitHub activity (recent commits, open PRs, open issues) from `aurora-synapz` and `alpinetechwebsite`, feeding the same context pipeline used for tasks/notes/Gmail/calendar. Unlike Google, no OAuth dance was needed — a fine-grained, read-only personal access token (Contents/Issues/Pull requests, scoped to just those two repos) covers it, deliberately narrower than the broad `gh` CLI OAuth token already on this machine (which carries `delete_repo`/`read:org` — explicitly avoided as too broad to reuse here).
+
+**Backend:** new `aurora-cli/lib/github.js` (`getProjectContext()`), mirroring `google.js`'s fail-open shape — returns `''` if `GITHUB_TOKEN` isn't set. Wired into `api/briefing.js` and `api/chat.js` alongside `getGoogleContext()`. Repos tracked via `GITHUB_REPOS` (defaults to the two above) — token scope and `GITHUB_REPOS` are kept in sync deliberately; granting the token broader repo access wouldn't add real awareness unless the env var list is expanded too.
+
+**Verified end-to-end:** asked Aurora in chat for the latest commit message on `aurora-synapz` and it returned the real, current top commit (`"Close out Step 10 (production E2E verification), add Step 11 App Store checklist"`) plus correctly reported no open PRs/issues — proving live data, not generic filler.
+
+**Side fix:** the user's `.zshrc` was missing the `nvm` init block entirely (file didn't exist), so `vercel` and other nvm-managed global CLIs resolved in sandboxed tool shells but not in the user's own interactive terminal. Added the standard `nvm.sh` sourcing block to `~/.zshrc`.
+
+No iOS changes — GitHub access here is a static server-side token, not per-user OAuth, so there's no connect/disconnect UI needed (same as Tasks/Notes/Knowledge).
+
+**Phase 2 is now fully complete** (Email, Calendar, Project Awareness). Next up per `vision/roadmap-v1.md`: Phase 3 (Agent Orchestration, Workflow Execution).
+
 ---
 
 ## How to use this doc

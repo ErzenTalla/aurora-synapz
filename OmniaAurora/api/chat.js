@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { CHAT_SYSTEM_PROMPT, formatTrackedContext } from '../aurora-cli/lib/buildPrompt.js';
 import { getProfile, getTrackedContext } from '../aurora-cli/lib/store.js';
 import { getGoogleContext } from '../aurora-cli/lib/google.js';
+import { getProjectContext } from '../aurora-cli/lib/github.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -21,8 +22,9 @@ export default async function handler(req, res) {
   }
 
   const profile = await getProfile();
-  const googleContext = await getGoogleContext();
-  const trackedContext = formatTrackedContext(await getTrackedContext()) + (googleContext ? `\n\n${googleContext}` : '');
+  const [googleContext, githubContext] = await Promise.all([getGoogleContext(), getProjectContext()]);
+  const extraContext = [googleContext, githubContext].filter(Boolean).join('\n\n');
+  const trackedContext = formatTrackedContext(await getTrackedContext()) + (extraContext ? `\n\n${extraContext}` : '');
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5';
 
