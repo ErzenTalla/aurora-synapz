@@ -20,7 +20,9 @@ Live at: https://aurorasyanapz.com
 | 4 | Admin document upload (for client docs/statements) | ✅ Done |
 | 5 | Email notifications (deposits, withdrawals, fees) | ✅ Done |
 | 6 | Real Stripe live keys | 🚧 Blocked — Stripe account approved, but paused on Kosovo payout problem (see below) |
-| 7 | Live Alpaca account funding | 🚧 Blocked — waiting on user's Alpaca account approval |
+| 7 | Live Alpaca account | ✅ Done (2026-06-19) — live keys wired in, account verified ACTIVE, $0 funded so far |
+| 8 | Manual (wire) deposit requests + admin Invest button | ✅ Done (2026-06-19) — bypasses Stripe for family-only use while Step 6 is blocked |
+| 9 | iOS app: full client+admin parity + App Store readiness | 🚧 In progress (2026-06-19/20) — see below, code complete for Phases A-D, verification partially done |
 
 ### Also fixed along the way
 - Vercel cron for nightly Alpaca sync was silently 404'ing (POST route vs GET-only cron) — fixed, now `GET /api/alpaca/cron-sync`.
@@ -31,8 +33,38 @@ Live at: https://aurorasyanapz.com
 
 ### Blocked on user / external
 - **Stripe live keys (Step 6)** — Stripe account itself is approved, but user hit a wall trying to add payout bank details: Stripe doesn't list Kosovo as a supported payout country, and the bank account they want to use (Alpine's, in Kosovo) can't be added. Decided to pause Step 6 entirely (no live keys wired in) until resolved with legal/financial advisor — same underlying issue as the BQK item below, just surfaced concretely on the Stripe payout screen (2026-06-18).
-- **Alpaca live account** — pending account document approval.
 - **Kosovo regulatory/legal (BQK)** — user consulting separately with legal/financial advisor; gates real-money operation, no code action pending.
+
+### Step 9 — iOS app: full functionality + App Store readiness (in progress, 2026-06-19/20)
+
+Audited the existing iOS app (`AuroraSynapz/iOS/`) and found it badly behind the backend: client-only had Overview/Holdings/Transactions/Documents/Account, admin only had Clients/Contacts. No Withdraw, no Deposit Request, no Fee Management, no admin document management, no Invest button — and real App Store blockers (no privacy manifest, JWT stored in `UserDefaults` instead of Keychain, dangling `LaunchScreenBackground` asset reference, unused Face ID string). Approved plan: build full client **and** admin parity, add a real Face ID app-lock, draft a privacy policy page.
+
+**Done (code complete, build + 38 unit tests passing):**
+- `PrivacyInfo.xcprivacy` added (no tracking, first-party-only data declared).
+- Fixed the missing `LaunchScreenBackground` colorset (was referenced but didn't exist).
+- `AuthStore` migrated from `UserDefaults` to Keychain (`Services/KeychainHelper.swift`), same public interface.
+- Real Face ID app-lock implemented (`BiometricAuthenticator.swift`, `LockView.swift`), toggle in `AccountView`, re-locks on backgrounding.
+- `NSPhotoLibraryUsageDescription` added (needed for proof-of-payment photo picker).
+- `Models.swift`: added `Fund`, `WithdrawalRequest`, `DepositRequest`, `InvestCashStatus`, `TradeResult`, `InvestResult`, `FeePreviewClient`/`Result`, `StripeDeposit`; extended `Portfolio`/`AdminUser`/`Document`.
+- `APIService.swift`: added a multipart/form-data helper (none existed — needed for deposit-proof and admin document upload) and ~20 missing endpoint methods; added a `401` → `NotificationCenter` → `AuthStore.logout()` path so expired sessions actually bounce to `LoginView` instead of leaving a dead error on screen.
+- New client screens: `WithdrawView`, `DepositRequestView` (with `PhotosPicker` proof upload), real in-app document download in `DocumentsView` (was previously just "email support").
+- New admin screens: `AdminDepositRequestsView` (review + the Invest panel — 40/30/20 split, mirrors today's web feature), `AdminWithdrawalsView`, `AdminFeeManagementView`, `AdminDocumentsView` (upload via `.fileImporter`, PDF/PNG/JPEG).
+- **Real bug found and fixed via live-backend verification**: Postgres `NUMERIC` columns come back as JSON *strings* from the `pg` driver (e.g. `"total_value": "99978.9"`) wherever the backend doesn't explicitly `parseFloat()` before `res.json()` — confirmed by curling the real API with the user's login. This silently breaks plain `Double` Codable fields. Affected **pre-existing** models too (`Portfolio`, `Holding`, `Transaction`), not just the new ones — likely never caught because the old unit tests used hand-written JSON with unquoted numbers, never real server responses. Fixed with a `lossyDouble`/`lossyDoubleIfPresent` `KeyedDecodingContainer` extension and custom `init(from:)` on every affected model.
+
+**Verification done:** `xcodegen generate` + `xcodebuild build` succeeds; `xcodebuild test` passes all 38 tests; app launches in Simulator (screenshot-confirmed login screen renders correctly, demo-fill button correctly gone); logged into the real production API with the user's actual admin credentials and confirmed live response shapes for `/api/admin/deposit-requests`, `/api/admin/invest/cash`, `/api/admin/withdrawals`, `/api/admin/fee/preview`, `/api/alpaca/status` (fund), `/api/admin/users` — this is what surfaced the NUMERIC-string bug above.
+
+**Not yet done:**
+- **Full interactive Simulator click-through** (tap through Withdraw/Deposit/admin screens with real data) — discovered this sandbox can query Simulator window geometry via Accessibility but **cannot** actually click/type (`osascript ... click at` fails with "not allowed assistive access"), and this project has no XCUITest target to script taps another way. Build+tests+live-API verification stand in for it for now; a hands-on pass on a real device/Simulator is still worth doing.
+- **Phase F (not executable by me — needs the user's Apple ID/Developer account)**: Apple Developer Program enrollment, Xcode signing Team selection (currently no `DEVELOPMENT_TEAM` set — this is the actual "won't archive" blocker), App Store Connect app record, screenshots, listing copy, export-compliance/age-rating answers, Submit for Review.
+
+**Privacy policy closeout (2026-06-20):** user approved the drafted `public/privacy.html` content as-is. Linked it from the marketing site footer (`index.html`, which already had a dead `href="#"` placeholder) and added a small link under the login form (`login.html`, which had no footer). URL is `https://aurorasyanapz.com/privacy.html` — ready to use as the required privacy-policy URL in App Store Connect once Phase F starts.
+
+**Stripe deposit flow hidden (2026-06-20):** user flagged that the live Stripe Payment Element was surfacing payment methods like Amazon Pay (Stripe's dashboard-driven default, not app code) — a reminder that the card-deposit flow is still test-keys-only while Step 6 is blocked. Commented out the "Deposit Funds" (Stripe) nav link in `dashboard.html` so clients only see "Wire Deposit"; `/deposit.html` itself is untouched and still reachable directly. Re-enable by uncommenting once Step 6's Kosovo payout blocker is resolved.
+
+Test deposit requests submitted during earlier dry-run testing (Blerina Mahmuti $100, Endrit Talla $10) were rejected by the user after confirming the upload/review flow worked — no fund impact, nothing to clean up.
+
+### Step 7 closeout — live Alpaca account (2026-06-19)
+Alpaca approved the live account. Swapped `ALPACA_API_KEY`/`ALPACA_SECRET_KEY` (live) and `ALPACA_ENDPOINT` (`https://api.alpaca.markets/v2`, was paper) in local `.env` and Vercel prod env vars (removed old paper vars first, since `vercel env add` fails on an existing key), then redeployed to production (`vercel --prod`, aliased to `aurorasyanapz.com`). Verified directly against Alpaca's REST API: account `283423123`, `status: ACTIVE`, currently `$0` cash/buying power (unfunded) — so no real orders execute yet, but the moment the account is funded, real deposits/withdrawals through the app will place real orders (`routes/stripe.js` auto-invests 40% SPY/30% BND/20% GLD on deposit; `routes/portal.js` auto-sells proportionally on withdrawal). No code changes were needed — the Alpaca integration was already endpoint-agnostic (no hardcoded "paper" logic anywhere in the codebase).
 
 ### Step 5 closeout (2026-06-18)
 SMTP wired up with a dedicated Gmail account (`alpinetechconsultancy@gmail.com`, app password, not personal/Workspace) as the sender, notifications landing at `erzentalla1@gmail.com`. `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER`, `SMTP_PASS`, `MAIL_TO` added to local `.env` and Vercel prod env vars; redeployed to production to pick up the new vars. Verified end-to-end by calling all four `services/email.js` functions directly (`sendDepositConfirmation`, `sendWithdrawalRequested`, `sendWithdrawalStatus`, `sendFeeNotice`) — all four delivered and confirmed correct by user. Did not run the flows through real Stripe/Alpaca/DB transactions against production, since that would mutate the seeded demo portfolio for no added signal (the email call sites are unconditional and untouched by this verification).

@@ -48,6 +48,18 @@ struct AccountView: View {
                                 .padding(.horizontal)
 
                             VStack(spacing: 0) {
+                                HStack {
+                                    Image(systemName: "faceid").foregroundStyle(Theme.gold)
+                                    Text("Face ID Lock").foregroundStyle(Theme.cream)
+                                    Spacer()
+                                    Toggle("", isOn: $auth.faceIDEnabled)
+                                        .labelsHidden()
+                                        .tint(Theme.gold)
+                                }
+                                .padding(16)
+
+                                Divider().background(Theme.gold.opacity(0.1))
+
                                 Button {
                                     withAnimation { showChangePw.toggle() }
                                 } label: {

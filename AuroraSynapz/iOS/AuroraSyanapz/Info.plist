@@ -22,6 +22,8 @@
 	<string>1</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to securely access your portfolio</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Attach a photo of your wire transfer receipt as proof of payment</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

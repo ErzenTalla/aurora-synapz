@@ -5,6 +5,7 @@ const requireAdmin = require('../middleware/requireAdmin');
 const db           = require('../db/index');
 const alpaca       = require('../services/alpaca');
 const emailSvc     = require('../services/email');
+const fundSvc      = require('../services/fund');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -411,6 +412,125 @@ router.patch('/withdrawals/:id/status', async (req, res) => {
     res.json({ success: true, id, status });
   } catch (err) {
     console.error('Update withdrawal error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/migrate — re-run db/setup() against the live database.
+// Safe to call any time: every statement in setup() is CREATE TABLE IF NOT
+// EXISTS / ADD COLUMN IF NOT EXISTS, so it's a no-op for anything that
+// already exists. Vercel's serverless entry (api/index.js) doesn't run
+// setup() on boot the way local server.js does, so this is how new tables
+// reach production.
+router.post('/migrate', async (req, res) => {
+  try {
+    await require('../db/setup')();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Migration error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Deposit requests (manual / wire deposits) ────────────────────
+router.get('/deposit-requests', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT dr.id, dr.user_id, dr.amount, dr.status, dr.units_allocated, dr.unit_price,
+             dr.filename, dr.notes, dr.created_at, dr.processed_at, u.name, u.email
+      FROM deposit_requests dr
+      JOIN users u ON u.id = dr.user_id
+      ORDER BY dr.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/admin/deposit-requests/:id/proof — admin downloads a client's uploaded proof
+router.get('/deposit-requests/:id/proof', async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const { rows: [dr] } = await db.query('SELECT * FROM deposit_requests WHERE id = $1', [id]);
+    if (!dr || !dr.file_data) return res.status(404).json({ error: 'Proof not found' });
+
+    res.setHeader('Content-Type', dr.mime_type || 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${dr.filename || 'proof'}"`);
+    res.send(dr.file_data);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PATCH /api/admin/deposit-requests/:id/status — confirm receipt (credits units) or reject
+router.patch('/deposit-requests/:id/status', async (req, res) => {
+  const id     = parseInt(req.params.id);
+  const status = req.body.status;
+  const notes  = req.body.notes || null;
+
+  if (!['received', 'rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Status must be received or rejected' });
+  }
+
+  try {
+    const { rows: [dr] } = await db.query(
+      `SELECT dr.*, u.name, u.email FROM deposit_requests dr
+       JOIN users u ON u.id = dr.user_id WHERE dr.id = $1`, [id]
+    );
+    if (!dr) return res.status(404).json({ error: 'Deposit request not found' });
+    if (dr.status !== 'pending') return res.status(400).json({ error: 'Already processed' });
+
+    let unitsAllocated = null, unitPrice = null;
+
+    // Receiving: credit the client's units now, at the current unit price —
+    // nothing was credited at request time, unlike withdrawals which deduct immediately.
+    if (status === 'received') {
+      const amount = parseFloat(dr.amount);
+      const result = await fundSvc.allocateUnits(dr.user_id, amount);
+      unitsAllocated = result.unitsAllocated;
+      unitPrice      = result.unitPrice;
+
+      await db.query(
+        `INSERT INTO transactions (user_id, type, amount, note) VALUES ($1, 'DEPOSIT', $2, $3)`,
+        [dr.user_id, amount, `Manual deposit #${id} confirmed`]
+      );
+      emailSvc.sendDepositConfirmation({ to: dr.email, name: dr.name, amount });
+    }
+
+    await db.query(
+      `UPDATE deposit_requests SET status=$1, notes=$2, units_allocated=$3, unit_price=$4, processed_at=NOW() WHERE id=$5`,
+      [status, notes, unitsAllocated, unitPrice, id]
+    );
+
+    res.json({ success: true, id, status });
+  } catch (err) {
+    console.error('Update deposit request error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Manual invest (batched cash already wired into Alpaca) ───────
+router.get('/invest/cash', async (req, res) => {
+  try {
+    if (!alpaca.isConfigured()) return res.json({ cash: 0, configured: false });
+    const account = await alpaca.getAccount();
+    res.json({ cash: parseFloat(account.cash), configured: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/invest', async (req, res) => {
+  const amount = parseFloat(req.body.amount);
+  if (!amount || isNaN(amount) || amount <= 0) {
+    return res.status(400).json({ error: 'Invalid amount' });
+  }
+  try {
+    const trades = await fundSvc.investCash(amount);
+    res.json({ success: true, amount, trades });
+  } catch (err) {
+    console.error('Invest error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

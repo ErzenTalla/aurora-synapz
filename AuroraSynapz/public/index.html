@@ -222,32 +222,6 @@
     }
     .hero-visual img { width: 100%; height: auto; }
 
-    .hero-stats {
-      position: absolute;
-      bottom: 60px;
-      left: 5%;
-      right: 5%;
-      display: flex;
-      gap: 48px;
-      border-top: 1px solid rgba(201,168,76,0.2);
-      padding-top: 32px;
-      z-index: 2;
-    }
-    .hero-stat-label {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-    .hero-stat-value {
-      font-family: var(--serif);
-      font-size: 32px;
-      font-weight: 600;
-      color: var(--gold);
-    }
-
     /* ── SECTION BASE ── */
     section { padding: 100px 5%; }
 
@@ -310,31 +284,6 @@
       transform: translate(16px, 16px);
       pointer-events: none;
     }
-    .about-badge {
-      position: absolute;
-      bottom: -24px;
-      right: -24px;
-      background: var(--gold);
-      color: var(--navy);
-      padding: 24px 28px;
-      text-align: center;
-    }
-    .about-badge-num {
-      font-family: var(--serif);
-      font-size: 40px;
-      font-weight: 700;
-      line-height: 1;
-      display: block;
-    }
-    .about-badge-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      display: block;
-      margin-top: 4px;
-    }
-
     .about-text { padding-left: 20px; }
     .about-text .section-subtitle { max-width: 100%; margin-bottom: 32px; }
 
@@ -470,9 +419,8 @@
     .strategy-panel { display: none; }
     .strategy-panel.active {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 80px;
-      align-items: start;
+      grid-template-columns: 1fr;
+      max-width: 720px;
     }
 
     .strategy-panel-title {
@@ -499,33 +447,6 @@
       flex-shrink: 0;
       transform: rotate(45deg);
     }
-
-    .strategy-metrics {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-    .strategy-metric {
-      padding: 28px 32px;
-      border: 1px solid rgba(201,168,76,0.15);
-      background: rgba(21,46,69,0.3);
-    }
-    .strategy-metric-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    .strategy-metric-value {
-      font-family: var(--serif);
-      font-size: 42px;
-      font-weight: 600;
-      color: var(--gold);
-      line-height: 1;
-    }
-    .strategy-metric-note { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
     /* ── WHY ── */
     #why { background: #091420; }
@@ -561,57 +482,6 @@
     }
     .why-item-text { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
 
-    /* ── TEAM ── */
-    #team { background: var(--navy); }
-
-    .team-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .team-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
-      margin-top: 60px;
-    }
-
-    .team-card {
-      border: 1px solid rgba(201,168,76,0.12);
-      overflow: hidden;
-      transition: border-color 0.3s;
-    }
-    .team-card:hover { border-color: rgba(201,168,76,0.4); }
-
-    .team-card-img {
-      width: 100%;
-      aspect-ratio: 4/3;
-      background: var(--navy-mid);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .team-card-img svg { width: 80px; height: 80px; color: rgba(201,168,76,0.2); }
-
-    .team-card-body { padding: 28px; }
-    .team-card-name {
-      font-family: var(--serif);
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--cream);
-      margin-bottom: 4px;
-    }
-    .team-card-role {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 16px;
-    }
-    .team-card-bio { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
-
     /* ── CONTACT ── */
     #contact { background: #060F18; }
 
@@ -633,25 +503,6 @@
       line-height: 1.2;
     }
     .contact-info-text { font-size: 15px; color: var(--text-muted); line-height: 1.9; margin-bottom: 40px; }
-
-    .contact-details { display: flex; flex-direction: column; gap: 20px; }
-    .contact-detail {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-    }
-    .contact-detail-icon {
-      width: 40px; height: 40px;
-      border: 1px solid rgba(201,168,76,0.3);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--gold);
-      flex-shrink: 0;
-    }
-    .contact-detail-label {
-      font-size: 11px; font-weight: 600; letter-spacing: 0.15em;
-      text-transform: uppercase; color: var(--gold); margin-bottom: 2px;
-    }
-    .contact-detail-value { font-size: 15px; color: var(--cream); }
 
     .contact-form { display: flex; flex-direction: column; gap: 20px; }
 
@@ -750,24 +601,19 @@
       .nav-links, .nav-cta { display: none; }
       .nav-hamburger { display: flex; }
 
-      .hero-stats { flex-wrap: wrap; gap: 24px; position: relative; bottom: auto; margin-top: 48px; border-top: 1px solid rgba(201,168,76,0.2); padding-top: 24px; }
       .hero-visual { display: none; }
       #hero { min-height: auto; padding: 100px 5% 60px; }
 
       .about-grid { grid-template-columns: 1fr; gap: 48px; }
       .about-text { padding-left: 0; }
-      .about-badge { bottom: -12px; right: 0; }
 
       .services-grid { grid-template-columns: 1fr; }
       .services-header { flex-direction: column; align-items: flex-start; gap: 20px; }
 
-      .strategy-panel.active { grid-template-columns: 1fr; gap: 40px; }
       .strategy-tabs { overflow-x: auto; white-space: nowrap; }
       .strategy-tab { padding: 14px 20px; }
 
       .why-grid { grid-template-columns: 1fr 1fr; }
-
-      .team-grid { grid-template-columns: 1fr; }
 
       .contact-inner { grid-template-columns: 1fr; gap: 48px; }
       .form-row { grid-template-columns: 1fr; }
@@ -826,7 +672,6 @@
     <li><a href="#about">About</a></li>
     <li><a href="#services">Services</a></li>
     <li><a href="#strategy">Strategy</a></li>
-    <li><a href="#team">Team</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="/login.html" style="color:var(--gold)">Client Portal</a></li>
   </ul>
@@ -855,30 +700,11 @@
       <strong>Enduring Wealth.</strong>
     </h1>
     <p class="hero-subtitle">
-      We combine AI-driven market intelligence with decades of financial expertise to protect and grow your wealth — with clarity, conviction, and unwavering integrity.
+      We combine AI-driven market intelligence with disciplined portfolio management to protect and grow your wealth — with clarity, conviction, and unwavering integrity.
     </p>
     <div class="hero-actions">
       <a href="#contact" class="btn-primary">Schedule a Consultation</a>
       <a href="#services" class="btn-secondary">Explore Services</a>
-    </div>
-  </div>
-
-  <div class="hero-stats">
-    <div>
-      <div class="hero-stat-label">Assets Under Management</div>
-      <div class="hero-stat-value">$2.4B+</div>
-    </div>
-    <div>
-      <div class="hero-stat-label">Years of Excellence</div>
-      <div class="hero-stat-value">15+</div>
-    </div>
-    <div>
-      <div class="hero-stat-label">Client Retention Rate</div>
-      <div class="hero-stat-value">97%</div>
-    </div>
-    <div>
-      <div class="hero-stat-label">Institutional Clients</div>
-      <div class="hero-stat-value">320+</div>
     </div>
   </div>
 </section>
@@ -889,10 +715,6 @@
     <div class="about-image-wrap reveal">
       <img src="/assets/logos/Aurora on Building.png" alt="Aurora Synapz Headquarters" />
       <div class="about-image-border"></div>
-      <div class="about-badge">
-        <span class="about-badge-num">AA+</span>
-        <span class="about-badge-label">Credit Rated</span>
-      </div>
     </div>
     <div class="about-text reveal">
       <div class="section-eyebrow">
@@ -902,7 +724,7 @@
       <h2 class="section-title">Built on Trust.<br />Powered by Intelligence.</h2>
       <div class="gold-divider"></div>
       <p class="section-subtitle">
-        Aurora Synapz Asset Management LLC is a premier investment firm that unites deep financial expertise with cutting-edge AI to deliver institutional-grade asset management to individuals, family offices, and corporations.
+        Aurora Synapz Asset Management LLC unites disciplined portfolio management with AI-driven research to manage wealth on behalf of our clients.
       </p>
       <p class="section-subtitle" style="margin-top: 16px;">
         Our approach is simple: your goals drive every decision. We build portfolios with purpose, guided by disciplined risk management and long-horizon thinking.
@@ -1019,23 +841,6 @@
           <li>Factor-based smart beta construction</li>
         </ul>
       </div>
-      <div class="strategy-metrics">
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">5-Year Annualized Return</div>
-          <div class="strategy-metric-value">18.4%</div>
-          <div class="strategy-metric-note">vs. benchmark 12.7%</div>
-        </div>
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Sharpe Ratio</div>
-          <div class="strategy-metric-value">1.82</div>
-          <div class="strategy-metric-note">Risk-adjusted performance</div>
-        </div>
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Max Drawdown (3Y)</div>
-          <div class="strategy-metric-value">-8.3%</div>
-          <div class="strategy-metric-note">Downside protection in 2022 downturn</div>
-        </div>
-      </div>
     </div>
 
     <div class="strategy-panel" id="panel-fixed">
@@ -1049,23 +854,6 @@
           <li>Duration management overlays</li>
           <li>Inflation-linked securities</li>
         </ul>
-      </div>
-      <div class="strategy-metrics">
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">5-Year Annualized Return</div>
-          <div class="strategy-metric-value">7.1%</div>
-          <div class="strategy-metric-note">vs. benchmark 5.4%</div>
-        </div>
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Average Credit Quality</div>
-          <div class="strategy-metric-value">A+</div>
-          <div class="strategy-metric-note">Investment-grade bias</div>
-        </div>
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Portfolio Yield</div>
-          <div class="strategy-metric-value">5.8%</div>
-          <div class="strategy-metric-note">Current weighted avg yield</div>
-        </div>
       </div>
     </div>
 
@@ -1081,23 +869,6 @@
           <li>Private credit and direct lending</li>
         </ul>
       </div>
-      <div class="strategy-metrics">
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Private Equity IRR</div>
-          <div class="strategy-metric-value">24.6%</div>
-          <div class="strategy-metric-note">Vintage weighted, gross</div>
-        </div>
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Real Assets Yield</div>
-          <div class="strategy-metric-value">9.2%</div>
-          <div class="strategy-metric-note">Cash-on-cash distribution rate</div>
-        </div>
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Correlation to S&amp;P 500</div>
-          <div class="strategy-metric-value">0.18</div>
-          <div class="strategy-metric-note">True diversification value</div>
-        </div>
-      </div>
     </div>
 
     <div class="strategy-panel" id="panel-macro">
@@ -1111,23 +882,6 @@
           <li>Cross-asset relative value</li>
           <li>Tail risk hedging and event-driven positions</li>
         </ul>
-      </div>
-      <div class="strategy-metrics">
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">3-Year Annualized Return</div>
-          <div class="strategy-metric-value">21.3%</div>
-          <div class="strategy-metric-note">Through multi-regime environments</div>
-        </div>
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Sortino Ratio</div>
-          <div class="strategy-metric-value">2.14</div>
-          <div class="strategy-metric-note">Downside-adjusted performance</div>
-        </div>
-        <div class="strategy-metric">
-          <div class="strategy-metric-label">Win Rate</div>
-          <div class="strategy-metric-value">64%</div>
-          <div class="strategy-metric-note">Rolling 12-month trade accuracy</div>
-        </div>
       </div>
     </div>
   </div>
@@ -1171,61 +925,8 @@
         <div class="why-item-icon">
           <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
         </div>
-        <div class="why-item-title">Dedicated Advisors</div>
-        <p class="why-item-text">Every client is paired with a senior relationship manager who coordinates all aspects of your financial life — one point of contact, total accountability.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- TEAM -->
-<section id="team">
-  <div class="team-inner">
-    <div class="reveal" style="text-align:center; max-width:600px; margin: 0 auto 0;">
-      <div class="section-eyebrow" style="justify-content:center;">
-        <div class="section-eyebrow-line"></div>
-        <span>Leadership</span>
-        <div class="section-eyebrow-line"></div>
-      </div>
-      <h2 class="section-title">The Minds Behind the Portfolio</h2>
-      <p class="section-subtitle" style="margin: 0 auto;">Decades of combined experience across global markets, technology, and financial strategy.</p>
-    </div>
-    <div class="team-grid">
-      <div class="team-card reveal">
-        <div class="team-card-img">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </div>
-        <div class="team-card-body">
-          <div class="team-card-name">Alexander Rhodes</div>
-          <div class="team-card-role">Chief Executive Officer</div>
-          <p class="team-card-bio">20+ years across Goldman Sachs and Blackstone. Pioneer in AI-driven investment strategies with $6B+ in portfolio oversight throughout career.</p>
-        </div>
-      </div>
-      <div class="team-card reveal">
-        <div class="team-card-img">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </div>
-        <div class="team-card-body">
-          <div class="team-card-name">Serena Nakamura</div>
-          <div class="team-card-role">Chief Investment Officer</div>
-          <p class="team-card-bio">Former head of quantitative research at JP Morgan. PhD in Financial Mathematics (MIT). Architect of Aurora's proprietary AI risk engine.</p>
-        </div>
-      </div>
-      <div class="team-card reveal">
-        <div class="team-card-img">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </div>
-        <div class="team-card-body">
-          <div class="team-card-name">Marcus Osei</div>
-          <div class="team-card-role">Head of Alternative Assets</div>
-          <p class="team-card-bio">15 years in private equity at KKR and Apollo. Specialist in emerging market private capital and cross-border infrastructure transactions.</p>
-        </div>
+        <div class="why-item-title">Direct Access</div>
+        <p class="why-item-text">You work directly with your advisor on every aspect of your portfolio — one point of contact, total accountability.</p>
       </div>
     </div>
   </div>
@@ -1242,37 +943,8 @@
       <h2 class="contact-info-title">Start Your<br />Wealth Journey</h2>
       <div class="gold-divider"></div>
       <p class="contact-info-text">
-        Whether you're looking to protect existing wealth, grow a portfolio, or explore institutional investment solutions — our team is ready to build a strategy around your goals.
+        Whether you're looking to protect existing wealth or grow a portfolio — we're ready to build a strategy around your goals. Send us a message and we'll get back to you directly.
       </p>
-      <div class="contact-details">
-        <div class="contact-detail">
-          <div class="contact-detail-icon">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
-          </div>
-          <div>
-            <div class="contact-detail-label">Office</div>
-            <div class="contact-detail-value">One Financial Center, Suite 3200<br />New York, NY 10005</div>
-          </div>
-        </div>
-        <div class="contact-detail">
-          <div class="contact-detail-icon">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-          </div>
-          <div>
-            <div class="contact-detail-label">Email</div>
-            <div class="contact-detail-value">invest@aurorasynap z.com</div>
-          </div>
-        </div>
-        <div class="contact-detail">
-          <div class="contact-detail-icon">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
-          </div>
-          <div>
-            <div class="contact-detail-label">Phone</div>
-            <div class="contact-detail-value">+1 (212) 555-0190</div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <div class="reveal">
@@ -1322,7 +994,7 @@
           <label class="form-label" for="message">Message (Optional)</label>
           <textarea class="form-textarea" id="message" placeholder="Tell us about your investment goals..."></textarea>
         </div>
-        <p class="form-disclaimer">By submitting this form you agree to be contacted by our team. Aurora Synapz Asset Management LLC is a registered investment adviser. Past performance does not guarantee future results.</p>
+        <p class="form-disclaimer">By submitting this form you agree to be contacted by our team. Past performance does not guarantee future results.</p>
         <button type="submit" class="btn-primary" style="align-self:flex-start; border:none; padding: 18px 48px; font-size: 12px;">Request Consultation</button>
       </form>
     </div>
@@ -1335,7 +1007,7 @@
     <div class="footer-top">
       <div class="footer-brand">
         <img src="/assets/logos/SampleLogo+text.png" alt="Aurora Synapz" />
-        <p class="footer-brand-text">Aurora Synapz Asset Management LLC provides institutional-quality investment management and wealth advisory services, powered by artificial intelligence and human expertise.</p>
+        <p class="footer-brand-text">Aurora Synapz Asset Management LLC provides disciplined investment management and wealth advisory services, powered by artificial intelligence and human oversight.</p>
       </div>
       <div>
         <div class="footer-col-title">Services</div>
@@ -1352,29 +1024,22 @@
         <ul class="footer-links">
           <li><a href="#about">About Us</a></li>
           <li><a href="#strategy">Strategy</a></li>
-          <li><a href="#team">Leadership</a></li>
-          <li><a href="#contact">Careers</a></li>
-          <li><a href="#contact">Press</a></li>
+          <li><a href="#contact">Contact</a></li>
         </ul>
       </div>
       <div>
         <div class="footer-col-title">Contact</div>
         <ul class="footer-links">
-          <li><a href="#contact">New York HQ</a></li>
-          <li><a href="#contact">London Office</a></li>
-          <li><a href="#contact">Dubai Office</a></li>
           <li><a href="/login.html">Client Portal</a></li>
-          <li><a href="#contact">Media Inquiries</a></li>
+          <li><a href="#contact">Get In Touch</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p class="footer-copy">&copy; 2026 Aurora Synapz Asset Management LLC. All rights reserved. Investment advisory services offered through Aurora Synapz AM LLC, a registered investment adviser.</p>
+      <p class="footer-copy">&copy; 2026 Aurora Synapz Asset Management LLC. All rights reserved.</p>
       <div class="footer-legal">
-        <a href="#">Privacy Policy</a>
+        <a href="/privacy.html">Privacy Policy</a>
         <a href="#">Terms of Use</a>
-        <a href="#">Disclosures</a>
-        <a href="#">ADV Part 2</a>
       </div>
     </div>
   </div>

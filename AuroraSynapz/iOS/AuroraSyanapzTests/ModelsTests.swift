@@ -215,5 +215,72 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(d.title, "Q4 2023 Statement")
         XCTAssertEqual(d.type, "Statement")
         XCTAssertEqual(d.sizeKb, 245)
+        XCTAssertNil(d.filename)
+    }
+
+    func testDocumentWithFilename() throws {
+        let json = """
+        {
+            "id": 2, "title": "Wire Receipt",
+            "type": "Statement", "period": "2026-06",
+            "size_kb": 120, "filename": "receipt.pdf", "mime_type": "application/pdf",
+            "created_at": "2026-06-19T00:00:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let d = try decoder.decode(Document.self, from: json)
+        XCTAssertEqual(d.filename, "receipt.pdf")
+        XCTAssertEqual(d.mimeType, "application/pdf")
+    }
+
+    // MARK: - Fund
+
+    func testFundDecoding() throws {
+        let json = """
+        { "total_value": 10500.25, "total_units": 10000, "unit_price": 1.05 }
+        """.data(using: .utf8)!
+
+        let f = try decoder.decode(Fund.self, from: json)
+        XCTAssertEqual(f.totalValue, 10500.25)
+        XCTAssertEqual(f.totalUnits, 10000)
+        XCTAssertEqual(f.unitPrice, 1.05)
+    }
+
+    // MARK: - WithdrawalRequest
+
+    func testWithdrawalRequestDecoding() throws {
+        let json = """
+        {
+            "id": 1, "user_id": 2, "amount": 500.0,
+            "units_redeemed": 476.19, "unit_price": 1.05,
+            "status": "pending", "notes": null,
+            "created_at": "2026-06-19T00:00:00Z", "processed_at": null
+        }
+        """.data(using: .utf8)!
+
+        let w = try decoder.decode(WithdrawalRequest.self, from: json)
+        XCTAssertEqual(w.status, "pending")
+        XCTAssertEqual(w.amount, 500.0)
+        XCTAssertNil(w.processedAt)
+        XCTAssertNil(w.name)
+    }
+
+    // MARK: - DepositRequest
+
+    func testDepositRequestDecoding() throws {
+        let json = """
+        {
+            "id": 1, "user_id": 2, "amount": 100.0, "status": "pending",
+            "units_allocated": null, "unit_price": null, "filename": "proof.jpg",
+            "notes": null, "created_at": "2026-06-19T00:00:00Z", "processed_at": null,
+            "name": "Blerina Mahmuti", "email": "blerina@example.com"
+        }
+        """.data(using: .utf8)!
+
+        let d = try decoder.decode(DepositRequest.self, from: json)
+        XCTAssertEqual(d.status, "pending")
+        XCTAssertEqual(d.filename, "proof.jpg")
+        XCTAssertEqual(d.name, "Blerina Mahmuti")
+        XCTAssertNil(d.unitsAllocated)
     }
 }

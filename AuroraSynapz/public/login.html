@@ -143,22 +143,6 @@
     }
     .error-msg.show { display: block; }
 
-    .demo-hint {
-      margin-top: 32px;
-      padding: 16px;
-      border: 1px dashed rgba(201,168,76,0.25);
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.8;
-    }
-    .demo-hint strong { color: var(--gold); }
-    .demo-fill {
-      background: none; border: none; color: var(--gold);
-      font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
-      cursor: pointer; text-decoration: underline; padding: 0;
-      margin-top: 8px; display: block; font-family: var(--sans);
-    }
-
     .back-link {
       display: inline-flex; align-items: center; gap: 8px;
       color: var(--muted); font-size: 12px; text-decoration: none;
@@ -208,19 +192,12 @@
     <button class="btn-login" type="submit" id="submit-btn">Sign In to Portal</button>
   </form>
 
-  <div class="demo-hint">
-    <strong>Demo Account</strong><br />
-    Use the credentials below to explore the client portal.
-    <button class="demo-fill" onclick="fillDemo()">Fill demo credentials</button>
-  </div>
+  <p style="text-align:center;margin-top:24px;font-size:12px;color:var(--muted);">
+    <a href="/privacy.html" style="color:var(--muted);text-decoration:underline;">Privacy Policy</a>
+  </p>
 </div>
 
 <script>
-  function fillDemo() {
-    document.getElementById('email').value    = 'demo@aurorasyanapz.com';
-    document.getElementById('password').value = 'Demo1234!';
-  }
-
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submit-btn');

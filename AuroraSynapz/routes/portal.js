@@ -1,4 +1,5 @@
 const express     = require('express');
+const multer      = require('multer');
 const requireAuth = require('../middleware/auth');
 const db          = require('../db/index');
 const alpaca      = require('../services/alpaca');
@@ -6,6 +7,16 @@ const emailSvc    = require('../services/email');
 
 const router = express.Router();
 router.use(requireAuth);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['application/pdf', 'image/png', 'image/jpeg'];
+    if (!allowed.includes(file.mimetype)) return cb(new Error('Only PDF, PNG, or JPEG files are allowed'));
+    cb(null, true);
+  },
+});
 
 router.get('/overview', async (req, res) => {
   try {
@@ -228,6 +239,66 @@ router.get('/withdrawals', async (req, res) => {
   }
 });
 
+// POST /api/portal/deposit-request — client requests a manual (wire) deposit
+router.post('/deposit-request', upload.single('file'), async (req, res) => {
+  const userId = req.user.id;
+  const amount = parseFloat(req.body.amount);
+
+  if (!amount || isNaN(amount) || amount <= 0) {
+    return res.status(400).json({ error: 'Invalid amount' });
+  }
+
+  try {
+    const { rows: [dr] } = await db.query(
+      `INSERT INTO deposit_requests (user_id, amount, filename, mime_type, file_data)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, user_id, amount, status, created_at`,
+      [
+        userId,
+        amount,
+        req.file ? req.file.originalname : null,
+        req.file ? req.file.mimetype : null,
+        req.file ? req.file.buffer : null,
+      ]
+    );
+    res.status(201).json(dr);
+  } catch (err) {
+    console.error('Deposit request error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/portal/deposit-requests — client's own deposit-request history
+router.get('/deposit-requests', async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT id, user_id, amount, status, units_allocated, unit_price, filename, notes, created_at, processed_at
+       FROM deposit_requests WHERE user_id = $1 ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/portal/deposit-requests/:id/proof — client downloads their own uploaded proof
+router.get('/deposit-requests/:id/proof', async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const { rows: [dr] } = await db.query(
+      'SELECT * FROM deposit_requests WHERE id = $1 AND user_id = $2', [id, req.user.id]
+    );
+    if (!dr || !dr.file_data) return res.status(404).json({ error: 'Proof not found' });
+
+    res.setHeader('Content-Type', dr.mime_type || 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${dr.filename || 'proof'}"`);
+    res.send(dr.file_data);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Sell positions proportionally to raise cash for a withdrawal
 async function sellForWithdrawal(amount, clientShare) {
   if (!alpaca.isConfigured()) return [];
@@ -262,5 +333,12 @@ async function sellForWithdrawal(amount, clientShare) {
   }
   return results;
 }
+
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError || err.message?.includes('Only PDF')) {
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});
 
 module.exports = router;

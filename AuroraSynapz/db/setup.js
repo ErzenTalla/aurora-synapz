@@ -145,6 +145,25 @@ async function setup() {
     ALTER TABLE documents ADD COLUMN IF NOT EXISTS uploaded_by  INTEGER REFERENCES users(id);
   `);
 
+  // Deposit requests table — manual (non-Stripe) deposits: client requests an
+  // amount, wires it externally, uploads proof; admin confirms receipt.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS deposit_requests (
+      id              SERIAL PRIMARY KEY,
+      user_id         INTEGER     NOT NULL REFERENCES users(id),
+      amount          NUMERIC     NOT NULL,
+      status          TEXT        NOT NULL DEFAULT 'pending',
+      units_allocated NUMERIC,
+      unit_price      NUMERIC,
+      filename        TEXT,
+      mime_type       TEXT,
+      file_data       BYTEA,
+      notes           TEXT,
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      processed_at    TIMESTAMPTZ
+    );
+  `);
+
   // One-time migration: seed fund and units from existing portfolio data
   // Only runs if fund has no units but portfolios already have value
   await pool.query(`

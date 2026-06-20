@@ -9,6 +9,18 @@ struct AdminTabView: View {
             AdminClientsView()
                 .tabItem { Label("Clients", systemImage: "person.2.fill") }
 
+            AdminDepositRequestsView()
+                .tabItem { Label("Deposits", systemImage: "arrow.down.circle.fill") }
+
+            AdminWithdrawalsView()
+                .tabItem { Label("Withdrawals", systemImage: "arrow.up.circle.fill") }
+
+            AdminFeeManagementView()
+                .tabItem { Label("Fees", systemImage: "dollarsign.circle.fill") }
+
+            AdminDocumentsView()
+                .tabItem { Label("Documents", systemImage: "doc.text.fill") }
+
             AdminContactsView()
                 .tabItem { Label("Contacts", systemImage: "envelope.fill") }
 

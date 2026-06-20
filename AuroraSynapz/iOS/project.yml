@@ -33,6 +33,7 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
         NSFaceIDUsageDescription: Use Face ID to securely access your portfolio
+        NSPhotoLibraryUsageDescription: Attach a photo of your wire transfer receipt as proof of payment
 
   AuroraSyanapzTests:
     type: bundle.unit-test

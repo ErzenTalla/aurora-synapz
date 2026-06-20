@@ -109,8 +109,12 @@ struct DocumentRow: View {
 }
 
 struct DocumentDetailSheet: View {
+    @EnvironmentObject var auth: AuthStore
     @Environment(\.dismiss) var dismiss
     let doc: Document
+    @State private var downloadedFileURL: URL?
+    @State private var isDownloading = false
+    @State private var downloadError: String?
 
     var typeColor: Color {
         switch doc.type {
@@ -153,23 +157,43 @@ struct DocumentDetailSheet: View {
                         .overlay(Rectangle().stroke(Theme.gold.opacity(0.1), lineWidth: 1))
                         .padding(.horizontal)
 
-                        // Download notice
+                        // Download
                         VStack(spacing: 12) {
-                            Image(systemName: "arrow.down.circle")
-                                .font(.system(size: 32))
-                                .foregroundStyle(Theme.gold.opacity(0.5))
-                            Text("To download this document, contact your advisor at")
-                                .font(.system(size: 13))
-                                .foregroundStyle(Theme.muted)
-                                .multilineTextAlignment(.center)
-                            Text("support@aurorasyanapz.com")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(Theme.gold)
+                            if let downloadedFileURL {
+                                ShareLink(item: downloadedFileURL) {
+                                    HStack {
+                                        Image(systemName: "square.and.arrow.up")
+                                        Text("SHARE / SAVE").font(.system(size: 11, weight: .bold)).tracking(2)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(14)
+                                    .background(Theme.gold)
+                                    .foregroundStyle(Theme.navy)
+                                }
+                            } else {
+                                if let downloadError {
+                                    Text(downloadError)
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Theme.red)
+                                }
+                                Button {
+                                    Task { await download() }
+                                } label: {
+                                    HStack {
+                                        if isDownloading { ProgressView().tint(Theme.navy) }
+                                        else {
+                                            Image(systemName: "arrow.down.circle")
+                                            Text("DOWNLOAD").font(.system(size: 11, weight: .bold)).tracking(2)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(14)
+                                    .background(Theme.gold)
+                                    .foregroundStyle(Theme.navy)
+                                }
+                                .disabled(isDownloading)
+                            }
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Theme.navy)
-                        .overlay(Rectangle().stroke(Theme.gold.opacity(0.1), lineWidth: 1))
                         .padding(.horizontal)
 
                         Spacer(minLength: 20)
@@ -184,6 +208,22 @@ struct DocumentDetailSheet: View {
                 }
             }
         }
+    }
+
+    func download() async {
+        guard let token = auth.token else { return }
+        isDownloading = true
+        downloadError = nil
+        do {
+            let data = try await APIService.shared.downloadDocument(id: doc.id, token: token)
+            let fileName = doc.filename ?? "\(doc.title).pdf"
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+            try data.write(to: url, options: .atomic)
+            downloadedFileURL = url
+        } catch {
+            downloadError = error.localizedDescription
+        }
+        isDownloading = false
     }
 }
 

@@ -20,6 +20,16 @@ struct ClientTabView: View {
                     Label("Activity", systemImage: "arrow.left.arrow.right")
                 }
 
+            DepositRequestView()
+                .tabItem {
+                    Label("Deposit", systemImage: "arrow.down.circle")
+                }
+
+            WithdrawView()
+                .tabItem {
+                    Label("Withdraw", systemImage: "arrow.up.circle")
+                }
+
             DocumentsView()
                 .tabItem {
                     Label("Documents", systemImage: "doc.text.fill")

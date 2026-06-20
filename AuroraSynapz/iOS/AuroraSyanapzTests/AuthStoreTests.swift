@@ -7,13 +7,13 @@ final class AuthStoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        UserDefaults.standard.removeObject(forKey: tokenKey)
-        UserDefaults.standard.removeObject(forKey: userKey)
+        KeychainHelper.delete(key: tokenKey)
+        KeychainHelper.delete(key: userKey)
     }
 
     override func tearDown() {
-        UserDefaults.standard.removeObject(forKey: tokenKey)
-        UserDefaults.standard.removeObject(forKey: userKey)
+        KeychainHelper.delete(key: tokenKey)
+        KeychainHelper.delete(key: userKey)
         super.tearDown()
     }
 
@@ -30,8 +30,8 @@ final class AuthStoreTests: XCTestCase {
 
     // MARK: - Persistence
 
-    func testRestoresTokenFromUserDefaults() {
-        UserDefaults.standard.set("saved-token", forKey: tokenKey)
+    func testRestoresTokenFromKeychain() {
+        KeychainHelper.saveString("saved-token", key: tokenKey)
         seedUser(role: "client")
 
         let store = AuthStore()
@@ -39,8 +39,8 @@ final class AuthStoreTests: XCTestCase {
         XCTAssertEqual(store.token, "saved-token")
     }
 
-    func testRestoresUserFromUserDefaults() {
-        UserDefaults.standard.set("saved-token", forKey: tokenKey)
+    func testRestoresUserFromKeychain() {
+        KeychainHelper.saveString("saved-token", key: tokenKey)
         seedUser(name: "Test User", email: "test@example.com", role: "client")
 
         let store = AuthStore()
@@ -49,7 +49,7 @@ final class AuthStoreTests: XCTestCase {
     }
 
     func testPersistenceAcrossMultipleInstances() {
-        UserDefaults.standard.set("shared-token", forKey: tokenKey)
+        KeychainHelper.saveString("shared-token", key: tokenKey)
         seedUser(role: "client")
 
         let store1 = AuthStore()
@@ -61,21 +61,21 @@ final class AuthStoreTests: XCTestCase {
     // MARK: - isLoggedIn / isAdmin
 
     func testIsLoggedInRequiresBothTokenAndUser() {
-        UserDefaults.standard.set("token-only", forKey: tokenKey)
+        KeychainHelper.saveString("token-only", key: tokenKey)
         // No user stored
         let store = AuthStore()
         XCTAssertFalse(store.isLoggedIn)
     }
 
     func testIsAdminTrueForAdminRole() {
-        UserDefaults.standard.set("admin-token", forKey: tokenKey)
+        KeychainHelper.saveString("admin-token", key: tokenKey)
         seedUser(role: "admin")
         let store = AuthStore()
         XCTAssertTrue(store.isAdmin)
     }
 
     func testIsAdminFalseForClientRole() {
-        UserDefaults.standard.set("client-token", forKey: tokenKey)
+        KeychainHelper.saveString("client-token", key: tokenKey)
         seedUser(role: "client")
         let store = AuthStore()
         XCTAssertFalse(store.isAdmin)
@@ -84,7 +84,7 @@ final class AuthStoreTests: XCTestCase {
     // MARK: - logout
 
     func testLogoutClearsMemoryState() {
-        UserDefaults.standard.set("logout-token", forKey: tokenKey)
+        KeychainHelper.saveString("logout-token", key: tokenKey)
         seedUser(role: "client")
 
         let store = AuthStore()
@@ -96,19 +96,19 @@ final class AuthStoreTests: XCTestCase {
         XCTAssertNil(store.user)
     }
 
-    func testLogoutRemovesUserDefaultsEntries() {
-        UserDefaults.standard.set("logout-token", forKey: tokenKey)
+    func testLogoutRemovesKeychainEntries() {
+        KeychainHelper.saveString("logout-token", key: tokenKey)
         seedUser(role: "client")
 
         let store = AuthStore()
         store.logout()
 
-        XCTAssertNil(UserDefaults.standard.string(forKey: tokenKey))
-        XCTAssertNil(UserDefaults.standard.data(forKey: userKey))
+        XCTAssertNil(KeychainHelper.loadString(key: tokenKey))
+        XCTAssertNil(KeychainHelper.load(key: userKey))
     }
 
     func testLogoutThenNewInstanceIsLoggedOut() {
-        UserDefaults.standard.set("gone-token", forKey: tokenKey)
+        KeychainHelper.saveString("gone-token", key: tokenKey)
         seedUser(role: "client")
 
         let store = AuthStore()
@@ -123,7 +123,7 @@ final class AuthStoreTests: XCTestCase {
     private func seedUser(name: String = "Seed User", email: String = "seed@example.com", role: String) {
         let user = AuthUser(id: 99, name: name, email: email, role: role)
         if let data = try? JSONEncoder().encode(user) {
-            UserDefaults.standard.set(data, forKey: userKey)
+            KeychainHelper.save(data, key: userKey)
         }
     }
 }
