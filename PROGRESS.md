@@ -85,7 +85,7 @@ App Store submission itself still needs the user's Apple Developer account (Phas
 9. Export compliance — almost certainly "no" (HTTPS only, no custom crypto).
 10. Age rating questionnaire.
 11. Pricing (free) / availability (countries).
-12. **App Review demo account** — app has no public sign-up (admin-issued accounts only), so App Review will need dedicated reviewer credentials supplied in App Store Connect's "App Review Information." Not yet created.
+12. **App Review demo account — created (2026-06-23).** `appreview@aurorasyanapz.com`, role `client`, zero balance (inserted directly via Neon, same shape as the admin "Add Client" flow — `users` + `portfolios` row, no fund/unit changes). Verified login works against production. Deliberately zero-balance, not seeded with fake value: this app's fund accounting is pooled and unit-based, so a fake balance on a reviewer account would distort the real unit price shared by Endrit/Blerina. Password given to user directly in conversation (not stored in this file) — paste both into App Store Connect's "App Review Information" notes.
 13. Submit for review.
 
 Social media announcement stays held until after App Store approval (user's call, 2026-06-20).
