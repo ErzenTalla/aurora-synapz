@@ -67,18 +67,26 @@ App Store submission itself still needs the user's Apple Developer account (Phas
 - App icon present (`Assets.xcassets/AppIcon.appiconset/AppIcon.png`)
 - Bundle ID `com.aurorasyanapz.app`, version `1.0.0 (1)`
 
-**Left — all gated on the user's Apple ID / Developer account:**
-1. Apple Developer Program enrollment ($99/yr) — blocks everything below.
-2. Xcode signing Team — `DEVELOPMENT_TEAM` is not set anywhere in `project.yml`/`project.pbxproj` right now; this is the actual "won't archive" blocker. User can give Claude the Team ID to wire into `project.yml` once enrolled, or set it directly in Xcode.
-3. App Store Connect: reserve the bundle ID, create the app record.
-4. Screenshots — Claude can generate these via the Simulator/XCUITest setup once signing works.
-5. Listing copy (name, subtitle, description, keywords, support URL) — Claude can draft on request, doesn't need to wait for enrollment.
-6. App Privacy questionnaire in App Store Connect — straightforward, maps directly from `PrivacyInfo.xcprivacy`.
-7. Export compliance — almost certainly "no" (HTTPS only, no custom crypto).
-8. Age rating questionnaire.
-9. Pricing (free) / availability (countries).
-10. Archive + upload build (Xcode or `xcodebuild archive` + Transporter) — needs signing Team set first.
-11. Submit for review.
+**Done (2026-06-23):**
+1. Apple Developer Program enrollment — user confirmed enrolled, Team ID `Q2Y8G759LA`.
+2. Xcode signing Team — wired `DEVELOPMENT_TEAM: Q2Y8G759LA` + `CODE_SIGN_STYLE: Automatic` into `project.yml` (base settings, applies to all targets), regenerated the project (`xcodegen generate`), verified with a real `xcodebuild archive` (Release config) — succeeded.
+3. App Store Connect app record created by user: Bundle ID `com.aurorasyanapz.app`, SKU `aurorasyanapz-ios-app`, name "Aurora Synapz".
+4. Listing copy drafted (name, subtitle, promotional text, full description, keywords, support/marketing/privacy URLs) — written to reflect actual app functionality (client portal, deposits/withdrawals, documents, Face ID), not the institutional marketing-site copy, and notes the app is invite-only (no public sign-up, accounts issued by the advisor).
+5. **First build uploaded to App Store Connect / TestFlight (2026-06-23).** Real blockers hit and fixed along the way:
+   - Xcode had no live Developer Portal session (no Xcode-Token in keychain for any account) — automatic Distribution cert/profile creation failed until user signed back into the Apple ID in Xcode Settings → Accounts.
+   - `xcodebuild -exportArchive` from the CLI doesn't auto-create profiles unless `-allowProvisioningUpdates` is passed — without it, export failed with "No profiles ... were found" even with a valid signed-in account.
+   - Upload-time validation (stricter than the local archive-time warning) **rejected** the build: declaring only Portrait/Portrait-upside-down orientations isn't allowed for apps that support iPad, since iPad multitasking requires all 4 orientations. Fixed by setting `TARGETED_DEVICE_FAMILY: "1"` (iPhone-only) in `project.yml` instead of adding landscape support the app was never designed or tested for.
+   - After that fix, archive → export with `destination: upload` in the export-options plist succeeded end-to-end directly from the CLI (no Transporter app needed) — **"Upload succeeded"**, build now processing in App Store Connect.
+
+**Left — gated on the user:**
+6. Wait for build processing to finish in App Store Connect, then select it for the TestFlight/App Store version.
+7. Screenshots — Claude can generate these via Simulator now that signing works.
+8. App Privacy questionnaire in App Store Connect — maps directly from `PrivacyInfo.xcprivacy`.
+9. Export compliance — almost certainly "no" (HTTPS only, no custom crypto).
+10. Age rating questionnaire.
+11. Pricing (free) / availability (countries).
+12. **App Review demo account** — app has no public sign-up (admin-issued accounts only), so App Review will need dedicated reviewer credentials supplied in App Store Connect's "App Review Information." Not yet created.
+13. Submit for review.
 
 Social media announcement stays held until after App Store approval (user's call, 2026-06-20).
 
