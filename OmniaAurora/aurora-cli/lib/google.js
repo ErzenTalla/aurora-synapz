@@ -45,19 +45,24 @@ export async function getValidAccessToken() {
   if (!tokens) return null;
   if (Date.now() < tokens.expiry - 60_000) return tokens.access_token;
 
-  const data = await requestToken({
-    refresh_token: tokens.refresh_token,
-    client_id: process.env.GOOGLE_CLIENT_ID,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET,
-    grant_type: 'refresh_token',
-  });
-  const updated = {
-    ...tokens,
-    access_token: data.access_token,
-    expiry: Date.now() + data.expires_in * 1000,
-  };
-  await saveJSON(TOKENS_PATHNAME, updated);
-  return updated.access_token;
+  try {
+    const data = await requestToken({
+      refresh_token: tokens.refresh_token,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      grant_type: 'refresh_token',
+    });
+    const updated = {
+      ...tokens,
+      access_token: data.access_token,
+      expiry: Date.now() + data.expires_in * 1000,
+    };
+    await saveJSON(TOKENS_PATHNAME, updated);
+    return updated.access_token;
+  } catch {
+    // Refresh token expired — callers gracefully skip Google context
+    return null;
+  }
 }
 
 export async function getConnectedEmail(accessToken) {

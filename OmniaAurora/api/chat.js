@@ -4,6 +4,26 @@ import { getProfile, getTrackedContext } from '../aurora-cli/lib/store.js';
 import { getGoogleContext } from '../aurora-cli/lib/google.js';
 import { getProjectContext } from '../aurora-cli/lib/github.js';
 
+const TOOLS = [
+  {
+    name: 'add_task',
+    description:
+      "Add a new task to the user's task list. Use this only when the user explicitly asks to add, track, or create a task. Always describe the action in your text reply (e.g. \"I'll add 'X' to your Y tasks\") — the user sees a confirmation prompt before the task is actually created.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string', description: 'Concise but specific task description.' },
+        domain: {
+          type: 'string',
+          enum: ['alpinetech', 'aurorasynapz', 'omnia', 'personal', 'general'],
+          description: 'Project or life area this task belongs to.',
+        },
+      },
+      required: ['text', 'domain'],
+    },
+  },
+];
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -35,6 +55,8 @@ export default async function handler(req, res) {
     max_tokens: 1000,
     system,
     messages: messages.map(({ role, content }) => ({ role, content })),
+    tools: TOOLS,
+    tool_choice: { type: 'auto' },
   });
 
   const reply = response.content
@@ -42,5 +64,13 @@ export default async function handler(req, res) {
     .map((block) => block.text)
     .join('\n');
 
-  res.status(200).json({ reply });
+  const toolUseBlock = response.content.find((block) => block.type === 'tool_use');
+  const pendingAction = toolUseBlock
+    ? { type: toolUseBlock.name, params: toolUseBlock.input }
+    : null;
+
+  // If Claude went straight to tool_use with no text, give a fallback verbal description
+  const finalReply = reply || (pendingAction ? `I'll add that to your tasks — confirm below.` : '');
+
+  res.status(200).json({ reply: finalReply, ...(pendingAction ? { pendingAction } : {}) });
 }

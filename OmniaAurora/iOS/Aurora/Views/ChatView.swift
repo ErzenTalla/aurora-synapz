@@ -8,6 +8,8 @@ struct ChatView: View {
     @State private var draftText = ""
     @State private var isSending = false
     @State private var errorMessage: String?
+    @State private var pendingAction: PendingAction?
+    @State private var isConfirming = false
 
     var body: some View {
         NavigationStack {
@@ -37,6 +39,9 @@ struct ChatView: View {
                         }
                         .padding()
                     }
+                    if let action = pendingAction {
+                        confirmationBanner(action)
+                    }
                     inputBar
                 }
             }
@@ -61,6 +66,64 @@ struct ChatView: View {
                 Spacer()
                 Text(message.content).foregroundStyle(Theme.navy).padding().background(Theme.gold).cornerRadius(10)
             }
+        }
+    }
+
+    private func confirmationBanner(_ action: PendingAction) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Add task:")
+                .font(.caption)
+                .foregroundStyle(Theme.muted)
+            Text(action.params.text)
+                .foregroundStyle(Theme.cream)
+                .font(.subheadline)
+            Text(Domain(rawValue: action.params.domain)?.label ?? action.params.domain)
+                .font(.caption)
+                .foregroundStyle(Theme.gold)
+            HStack(spacing: 12) {
+                Button {
+                    Task { await confirmAction(action) }
+                } label: {
+                    Label("Confirm", systemImage: "checkmark")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.navy)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Theme.gold)
+                        .cornerRadius(8)
+                }
+                .disabled(isConfirming)
+
+                Button("Cancel") {
+                    pendingAction = nil
+                }
+                .foregroundStyle(Theme.muted)
+                .font(.subheadline)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.navy2)
+        .cornerRadius(12)
+        .padding(.horizontal)
+        .padding(.bottom, 4)
+    }
+
+    private func confirmAction(_ action: PendingAction) async {
+        guard action.type == "add_task" else { return }
+        isConfirming = true
+        pendingAction = nil
+        defer { isConfirming = false }
+
+        do {
+            _ = try await APIService.shared.addTask(text: action.params.text, domain: action.params.domain)
+            let domainLabel = Domain(rawValue: action.params.domain)?.label ?? action.params.domain
+            let confirmation = "Done — added to your \(domainLabel) tasks."
+            messages.append(ChatMessage(role: .assistant, content: confirmation))
+            speech.speak(confirmation)
+            try? await APIService.shared.saveChatHistory(date: todayDateString, messages: messages)
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -118,6 +181,7 @@ struct ChatView: View {
         let text = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         draftText = ""
+        pendingAction = nil
         messages.append(ChatMessage(role: .user, content: text))
 
         isSending = true
@@ -125,13 +189,16 @@ struct ChatView: View {
         defer { isSending = false }
 
         do {
-            let reply = try await APIService.shared.sendChat(
+            let chatReply = try await APIService.shared.sendChat(
                 briefingDate: briefing.date,
                 briefingText: briefing.briefing,
                 messages: messages
             )
-            messages.append(ChatMessage(role: .assistant, content: reply))
-            speech.speak(reply)
+            messages.append(ChatMessage(role: .assistant, content: chatReply.reply))
+            speech.speak(chatReply.reply)
+            if let action = chatReply.pendingAction {
+                pendingAction = action
+            }
             try? await APIService.shared.saveChatHistory(date: todayDateString, messages: messages)
         } catch {
             errorMessage = error.localizedDescription

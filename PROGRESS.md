@@ -179,7 +179,7 @@ Deliberately staged "baby steps" MVP — prove the daily-briefing loop manually 
 | 3 | Automate one context source | ✅ Done (2026-06-17) |
 | 4 | Checkpoint: did this earn a real interface? | ⏳ Pending |
 | 5 | First iPhone app (read-only) | ⏳ Pending |
-| 6 | First confirmed write action | ⏳ Pending |
+| 6 | First confirmed write action | ✅ Done (2026-07-04) |
 
 ### Personal context profile
 Built out in `OmniaAurora/context/profile.md` through a guided discovery conversation. Key findings: motivated by building durable systems/frameworks that outlive direct involvement (not ownership/company size); system-building is intrinsically motivating, pure execution is neutral (not draining); real costs already being paid for this work — family time, sleep, some money — these are the things to protect going forward. Status/recognition as a motivator is still untested.
@@ -251,11 +251,28 @@ No iOS changes — GitHub access here is a static server-side token, not per-use
 
 **Phase 2 is now fully complete** (Email, Calendar, Project Awareness). Next up per `vision/roadmap-v1.md`: Phase 3 (Agent Orchestration, Workflow Execution).
 
-### Session close (2026-06-20) — Phase 3 starting point decided, not yet built
+### Phase 3 started — first confirmed write action (2026-07-04)
 
-Stopping for today with Phase 2 fully shipped. Phase 3's roadmap entries (Agent Orchestration, Workflow Execution) are still just headings — no detailed spec exists yet, and it's a real architectural jump: everything built in Phases 1-2 is read-only (tasks/notes/knowledge, Gmail, calendar, GitHub), while Phase 3 is where Aurora starts actually doing things.
+Step 6 (first confirmed write action) and Phase 3's opening move are now shipped. Aurora can create tasks from chat, with explicit human approval before execution.
 
-**Decided starting point for next session:** rather than jumping straight into multi-agent orchestration or full workflow execution, start Phase 3 with one small, explicitly-confirmed write action through chat — e.g. "add this as a task" triggers the existing Tasks API (`api/tasks.js`), but only after Aurora repeats the action back and the user confirms. This also closes out the original (pre-Phase-1/2) MVP roadmap's still-pending "Step 6: first confirmed write action," and follows architecture principle #4, "Human Approval for Sensitive Actions" (`vision/architecture-principles-v1.md`). Not yet scoped in detail or built — pick this up next session.
+**Architecture:** Uses Claude's real tool-use API (`tools` + `tool_choice: "auto"` in `api/chat.js`) — Aurora only invokes `add_task` when the user explicitly asks, and always includes a verbal description in her text reply before the tool fires. The backend returns `{ reply, pendingAction: { type, params } }` — the write action itself happens on the iOS client after user confirmation, keeping the backend stateless and human approval firmly in the UI layer (architecture principle #4).
+
+**Backend changes:**
+- `api/chat.js`: Added `TOOLS` definition (`add_task` with `text`/`domain` params), passes them to Claude with `tool_choice: "auto"`, extracts `tool_use` block from response and returns it as `pendingAction` alongside the text reply. Fallback verbal reply if Claude uses the tool with no text block.
+- `aurora-cli/lib/buildPrompt.js`: Extended `CHAT_SYSTEM_PROMPT` with a WRITE ACTIONS section telling Aurora she can add tasks, to describe the action in her text reply, and that the confirmation step happens in the UI so she shouldn't ask "shall I?".
+- `aurora-cli/lib/google.js`: Fixed a bug where `getValidAccessToken()` threw on expired refresh tokens instead of returning `null` — was crashing the entire `/api/chat` function whenever Google's 7-day token lapsed, even though Google context is fail-open everywhere else.
+
+**iOS changes (`OmniaAurora/iOS/`):**
+- `Models/Models.swift`: Added `PendingAction` struct (type + `TaskActionParams`), updated `ChatReply` to include optional `pendingAction`.
+- `Services/APIService.swift`: `sendChat()` now returns `ChatReply` directly (was returning `String` — the `reply` field).
+- `Views/ChatView.swift`: Added `@State private var pendingAction: PendingAction?`, an inline `confirmationBanner()` view (shown between the scroll view and input bar when a pending action exists), and `confirmAction()` which calls `APIService.addTask()` on confirm, appends a spoken "Done — added to your X tasks." confirmation message, and saves chat history. Cancelling just clears the banner.
+
+**Verified end-to-end against production:**
+- `"Add a task to follow up with Paysera about the Kosovo payout question"` → returns `{ reply: "I'll add 'Follow up with Paysera...' to your Aurora Synapz tasks.", pendingAction: { type: "add_task", params: { text: "...", domain: "aurorasynapz" } } }` ✅
+- Normal question (`"What should I focus on today?"`) → returns only `reply`, no `pendingAction` ✅
+- iOS build: `BUILD SUCCEEDED` ✅
+
+**Step 6 / Phase 3 opening move: complete.** The original MVP roadmap Step 6 ("first confirmed write action") is now closed. Next Phase 3 moves: expand write actions to notes/knowledge; consider multi-step workflows (e.g. "draft a reply to this email and add it as a task").
 
 ---
 

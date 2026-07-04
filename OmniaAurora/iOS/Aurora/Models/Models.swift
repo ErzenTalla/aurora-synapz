@@ -58,8 +58,19 @@ struct ChatMessage: Codable, Identifiable, Equatable {
     }
 }
 
+struct PendingAction: Decodable {
+    let type: String
+    let params: TaskActionParams
+
+    struct TaskActionParams: Decodable {
+        let text: String
+        let domain: String
+    }
+}
+
 struct ChatReply: Decodable {
     let reply: String
+    let pendingAction: PendingAction?
 }
 
 struct ProfileResponse: Decodable {

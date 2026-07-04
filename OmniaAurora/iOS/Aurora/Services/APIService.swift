@@ -61,14 +61,13 @@ class APIService {
         let _: ProfileResponse = try await request("/api/profile", method: "POST", body: ["profile": profile])
     }
 
-    func sendChat(briefingDate: String, briefingText: String, messages: [ChatMessage]) async throws -> String {
+    func sendChat(briefingDate: String, briefingText: String, messages: [ChatMessage]) async throws -> ChatReply {
         let body: [String: Any] = [
             "briefingDate": briefingDate,
             "briefingText": briefingText,
             "messages": messages.map { ["role": $0.role.rawValue, "content": $0.content] },
         ]
-        let reply: ChatReply = try await request("/api/chat", method: "POST", body: body)
-        return reply.reply
+        return try await request("/api/chat", method: "POST", body: body)
     }
 
     func fetchChatHistory(date: String) async throws -> [ChatMessage] {
