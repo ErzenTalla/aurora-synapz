@@ -20,6 +20,7 @@
 		AFAD1E7D0BE0E83BA15F5D54 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264CCE51B59F551D49FFEC5B /* APIService.swift */; };
 		B0BCEF968285E49859BFDDA3 /* AuroraApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCB3719991A6FFE9C5EE651F /* AuroraApp.swift */; };
 		BCF6FFCBEE0DFA56E06A8745 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C732C89706CCBFB9251723B /* Assets.xcassets */; };
+		BD8E6FF3F67A9FE57991D5CF /* AuroraQATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7171D20582FF72C28441972 /* AuroraQATests.swift */; };
 		FA6B2694000DC581BE6FDF51 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7559C80B3AE39F96FEF0110C /* TodayView.swift */; };
 /* End PBXBuildFile section */
 
@@ -45,6 +46,7 @@
 		77A41F303E13BD97E90A9C28 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		8DB50E47F031892B2110D229 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		A078D712EDB91254FB4C65EB /* Aurora.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Aurora.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7171D20582FF72C28441972 /* AuroraQATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraQATests.swift; sourceTree = "<group>"; };
 		AADC563D80995D808A6C7C77 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CC054F4CE6C3B2DD2A3BC124 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		CCB3719991A6FFE9C5EE651F /* AuroraApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraApp.swift; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 		73424F18C1CC7016E11A8AF3 /* AuroraUITests */ = {
 			isa = PBXGroup;
 			children = (
+				A7171D20582FF72C28441972 /* AuroraQATests.swift */,
 				2736024F981FD786A9917885 /* AuroraUITests.swift */,
 			);
 			path = AuroraUITests;
@@ -181,7 +184,13 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					42A5C0E29A2F7401AE1DAAA6 = {
+						DevelopmentTeam = Q2Y8G759LA;
+						ProvisioningStyle = Automatic;
+					};
 					DE6A1029B193925F8B0C10D2 = {
+						DevelopmentTeam = Q2Y8G759LA;
+						ProvisioningStyle = Automatic;
 						TestTargetID = 42A5C0E29A2F7401AE1DAAA6;
 					};
 				};
@@ -241,6 +250,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BD8E6FF3F67A9FE57991D5CF /* AuroraQATests.swift in Sources */,
 				942CE6783C632D9B6C8F58ED /* AuroraUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -305,9 +315,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = Q2Y8G759LA;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -363,9 +375,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = Q2Y8G759LA;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;

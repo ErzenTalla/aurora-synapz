@@ -297,6 +297,36 @@ Existing 3 tests (Today flow, History/Chat/Profile tab loads, Workspace task add
 
 **Manual checklist:** still for you to run through live — items 1–10 in the QA plan cover voice, audio readback, Google status, reminder toggle, and profile save.
 
+### Keyboard dismissal UX fixes (2026-07-04)
+
+Two keyboard-stuck scenarios surfaced during the manual QA pass and were fixed in the same session:
+
+**Chat tab — can't switch tabs while keyboard is open:**
+- `ScrollView` in `ChatView.swift` now has `.scrollDismissesKeyboard(.immediately)` — any upward scroll collapses the keyboard, and tapping outside the text field also dismisses it, freeing the tab bar.
+
+**Profile tab — keyboard has no dismiss path:**
+- Added `@FocusState private var isEditorFocused: Bool` to `ProfileView.swift`, bound via `.focused($isEditorFocused)` on the `TextEditor`.
+- Added a gold "Done" button in the keyboard accessory bar via `ToolbarItem(placement: .keyboard)` — tapping it sets `isEditorFocused = false`, collapsing the keyboard cleanly.
+- Avoided adding `.onTapGesture { isEditorFocused = false }` to the parent `VStack` — that gesture interceptor blocked taps on the `TextEditor` itself, preventing the keyboard from opening. The `ToolbarItem` approach is the correct pattern.
+
+Both fixes committed as `d8f7050` and pushed to `origin/master`. Verified in Simulator; final confirmation on real device left to user.
+
+### Session close — Phase 3 status (2026-07-04)
+
+Phase 3 first move is live and end-to-end tested. State at close of session:
+
+**Done this session:**
+- Tool-use-based task creation via chat (`add_task` tool, `pendingAction` confirmation pattern)
+- Google OAuth token-expiry crash fix in `aurora-cli/lib/google.js`
+- Device signing wired into `project.yml` (`DEVELOPMENT_TEAM: Q2Y8G759LA`, `CODE_SIGN_STYLE: Automatic`) — enables on-device builds without touching Xcode UI
+- Full backend health check (8/8) and XCUITest suite (8/8 on device)
+- Keyboard dismissal fixed: Chat `scrollDismissesKeyboard`, Profile "Done" accessory button
+
+**Phase 3 next moves (in priority order):**
+1. Expand write actions: add notes and knowledge entries from chat (same `pendingAction` pattern, new tools `add_note` / `add_fact`)
+2. Send `tool_result: cancelled` back to Claude after user Cancel (prevents re-fire in subsequent messages; also fixes XCUITest isolation issue)
+3. Multi-step workflows (e.g. "draft a reply to this email and add it as a task")
+
 ---
 
 ## How to use this doc
