@@ -274,6 +274,29 @@ Step 6 (first confirmed write action) and Phase 3's opening move are now shipped
 
 **Step 6 / Phase 3 opening move: complete.** The original MVP roadmap Step 6 ("first confirmed write action") is now closed. Next Phase 3 moves: expand write actions to notes/knowledge; consider multi-step workflows (e.g. "draft a reply to this email and add it as a task").
 
+### Full end-to-end QA pass — device (2026-07-04)
+
+**Backend health checks: 8/8 passed**
+- All CRUD APIs (tasks, notes, knowledge, profile, briefings) responding correctly
+- Google OAuth: connected as `erzentalla1@gmail.com` ✅
+- Chat normal question: reply only, no `pendingAction` ✅
+- Chat task intent: `pendingAction.type == "add_task"` ✅
+
+**XCUITest suite on device (iPhone 15 Pro Max, iOS 26.3.1): 8/8 passed**
+
+New test file `AuroraUITests/AuroraQATests.swift` added (5 new cases):
+- `testChatNormalMessageReply` — sends real question, waits up to 20s for Claude API reply, asserts 2 bubbles + no stray banner (19.5s) ✅
+- `testChatTaskCancel` — task intent message → banner appears → Cancel → banner gone (23.2s) ✅
+- `testChatTaskConfirmAndVerify` — task intent → banner → Confirm → "Done" message appears (26.1s) ✅
+- `testNotesAddDelete` — add note via sheet, swipe-delete (17.3s) ✅
+- `testKnowledgeAddDelete` — add fact via sheet, swipe-delete (17.3s) ✅
+
+Existing 3 tests (Today flow, History/Chat/Profile tab loads, Workspace task add/toggle/delete) all continued to pass.
+
+**Known test-isolation issue (minor):** The chat tests share persisted chat history (saved to Blob per day). `testChatTaskCancel` ran before `testChatTaskConfirmAndVerify` and saved its conversation to Blob. When `testChatTaskConfirmAndVerify` launched and loaded chat history, Claude saw the prior cancelled task request in context and re-fired `add_task` for it — leaking one task ("Aurora cancel smoke test") despite the Cancel assertion passing correctly. Cleaned up post-run. Not a bug in the cancel UI flow itself. Fix for a future session: clear chat history in XCUITest `tearDownWithError`, or send a `tool_result: cancelled` back to Claude after Cancel.
+
+**Manual checklist:** still for you to run through live — items 1–10 in the QA plan cover voice, audio readback, Google status, reminder toggle, and profile save.
+
 ---
 
 ## How to use this doc

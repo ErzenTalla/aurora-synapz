@@ -148,6 +148,7 @@ struct ChatView: View {
             } label: {
                 Image(systemName: "arrow.up.circle.fill").foregroundStyle(Theme.gold)
             }
+            .accessibilityLabel("Send message")
             .disabled(draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSending)
         }
         .padding()
