@@ -39,6 +39,7 @@ struct ChatView: View {
                         }
                         .padding()
                     }
+                    .scrollDismissesKeyboard(.immediately)
                     if let action = pendingAction {
                         confirmationBanner(action)
                     }

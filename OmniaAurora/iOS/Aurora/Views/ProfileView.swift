@@ -9,6 +9,7 @@ struct ProfileView: View {
     @State private var savedMessage: String?
     @State private var googleStatus: GoogleStatus?
     @State private var isCheckingGoogle = false
+    @FocusState private var isEditorFocused: Bool
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -29,6 +30,14 @@ struct ProfileView: View {
                         .background(Theme.navy2)
                         .cornerRadius(10)
                         .padding()
+                        .focused($isEditorFocused)
+                        .toolbar {
+                            ToolbarItem(placement: .keyboard) {
+                                Button("Done") { isEditorFocused = false }
+                                    .foregroundStyle(Theme.gold)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
+                        }
 
                     if let errorMessage {
                         Text(errorMessage).foregroundStyle(Theme.red).padding(.horizontal)
