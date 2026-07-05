@@ -188,6 +188,28 @@ async function setup() {
     END;
     $$;
   `);
+
+  // Simons Phase 1 — signal logging table (dry-run signal validation only).
+  // Board approval 2026-06-29; Head of IT sign-off 2026-07-04 (additive schema
+  // change only — no existing tables modified). No trade execution reads this.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS strategy_signals (
+      id              SERIAL PRIMARY KEY,
+      run_id          TEXT        NOT NULL,
+      run_mode        TEXT        NOT NULL DEFAULT 'dry-run',
+      layer           TEXT        NOT NULL,
+      symbol          TEXT        NOT NULL,
+      momentum_short  NUMERIC,
+      momentum_long   NUMERIC,
+      composite_score NUMERIC,
+      rank            INTEGER,
+      selected        BOOLEAN     NOT NULL DEFAULT FALSE,
+      notes           TEXT,
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS strategy_signals_run
+      ON strategy_signals (run_id);
+  `);
 }
 
 module.exports = setup;

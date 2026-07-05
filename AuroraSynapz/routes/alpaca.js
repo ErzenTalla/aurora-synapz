@@ -166,4 +166,138 @@ router.get('/cron-sync', async (req, res) => {
   }
 });
 
+// ── Simons Phase 1: strategy signal computation — DRY-RUN ONLY ───
+// Board approval 2026-06-29; Head of IT sign-off 2026-07-04.
+// This code path computes and LOGS signals to strategy_signals.
+// It NEVER calls alpaca.submitOrder() and has no execution branch.
+// Phase 2 (paper trading) requires separate Board approval.
+
+const CORE_ETFS         = ['SPY', 'QQQ', 'VTI', 'BND', 'GLD'];
+const OVERLAY_EQUITIES  = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA'];
+const OVERLAY_THRESHOLD = 0.02;  // min composite momentum to select overlay equity
+const DEFENSIVE_TRIGGER = -0.05; // SPY 20-day momentum below this → defensive posture
+
+function isoDaysAgo(days) {
+  return new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+}
+
+async function fetchDailyCloses(symbol) {
+  const feed = process.env.ALPACA_DATA_FEED || 'iex';
+  const qs = `?timeframe=1Day&start=${isoDaysAgo(300)}&limit=210&adjustment=split&feed=${feed}`;
+  const data = await alpaca.getBars(symbol, qs);
+  return (data.bars || []).map(b => b.c);
+}
+
+// Percent return over the last `lookback` trading days
+function pctReturn(closes, lookback) {
+  if (!closes || closes.length < lookback + 1) return null;
+  const latest = closes[closes.length - 1];
+  const past   = closes[closes.length - 1 - lookback];
+  return past > 0 ? (latest - past) / past : null;
+}
+
+async function runStrategySignals() {
+  if (!alpaca.isConfigured()) throw new Error('Alpaca API keys not configured');
+
+  const runId  = `dryrun-${new Date().toISOString()}`;
+  const closes = {};
+  for (const sym of [...new Set([...CORE_ETFS, ...OVERLAY_EQUITIES])]) {
+    try {
+      closes[sym] = await fetchDailyCloses(sym);
+    } catch (err) {
+      closes[sym] = null;
+      console.error(`strategy-run: bars fetch failed for ${sym}: ${err.message}`);
+    }
+  }
+
+  const rows = [];
+
+  // Core ETF rotation layer — 3-month (63d) + 6-month (126d), 50/50 composite
+  const etf = CORE_ETFS.map(sym => {
+    const short = pctReturn(closes[sym], 63);
+    const long  = pctReturn(closes[sym], 126);
+    const score = short !== null && long !== null ? 0.5 * short + 0.5 * long : null;
+    return { sym, short, long, score };
+  }).sort((a, b) => (b.score ?? -Infinity) - (a.score ?? -Infinity));
+  etf.forEach((e, i) => rows.push({
+    layer: 'etf_rotation', symbol: e.sym, short: e.short, long: e.long,
+    score: e.score, rank: i + 1,
+    selected: i < 3 && e.score !== null && e.score > 0,
+    notes: e.score === null ? 'insufficient data' : null,
+  }));
+
+  // Momentum overlay layer — 20d + 50d, top 2 above threshold
+  const eq = OVERLAY_EQUITIES.map(sym => {
+    const short = pctReturn(closes[sym], 20);
+    const long  = pctReturn(closes[sym], 50);
+    const score = short !== null && long !== null ? 0.5 * short + 0.5 * long : null;
+    return { sym, short, long, score };
+  }).sort((a, b) => (b.score ?? -Infinity) - (a.score ?? -Infinity));
+  eq.forEach((e, i) => rows.push({
+    layer: 'momentum_overlay', symbol: e.sym, short: e.short, long: e.long,
+    score: e.score, rank: i + 1,
+    selected: i < 2 && e.score !== null && e.score > OVERLAY_THRESHOLD,
+    notes: e.score === null ? 'insufficient data' : null,
+  }));
+
+  // Defensive check — SPY 20-day momentum
+  const spy20 = pctReturn(closes.SPY, 20);
+  const defensive = spy20 !== null && spy20 < DEFENSIVE_TRIGGER;
+  rows.push({
+    layer: 'defensive', symbol: 'SPY', short: spy20, long: null, score: spy20,
+    rank: null, selected: defensive,
+    notes: defensive ? 'DEFENSIVE: rotate signal to BND+GLD (log only — no orders)' : 'normal posture',
+  });
+
+  for (const r of rows) {
+    await db.query(`
+      INSERT INTO strategy_signals
+        (run_id, run_mode, layer, symbol, momentum_short, momentum_long, composite_score, rank, selected, notes)
+      VALUES ($1, 'dry-run', $2, $3, $4, $5, $6, $7, $8, $9)
+    `, [runId, r.layer, r.symbol, r.short, r.long, r.score, r.rank, r.selected, r.notes]);
+  }
+
+  return {
+    run_id: runId,
+    dry_run: true,
+    orders_placed: 0,
+    signals_logged: rows.length,
+    etf_top3: etf.slice(0, 3).map(e => e.sym),
+    overlay_selected: eq.filter((e, i) => i < 2 && e.score !== null && e.score > OVERLAY_THRESHOLD).map(e => e.sym),
+    defensive_posture: defensive,
+  };
+}
+
+// ── POST /api/alpaca/strategy-run — admin-triggered dry run ──────
+router.post('/strategy-run', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+  try {
+    const result = await runStrategySignals();
+    res.json({ ...result, ran_at: new Date().toISOString() });
+  } catch (err) {
+    console.error('Strategy run error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/alpaca/cron-strategy-run — Vercel cron (CRON_SECRET) ─
+router.get('/cron-strategy-run', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET || '';
+  if (cronSecret) {
+    const auth = req.headers.authorization || '';
+    if (auth !== `Bearer ${cronSecret}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+  try {
+    const result = await runStrategySignals();
+    res.json({ ...result, ran_at: new Date().toISOString() });
+  } catch (err) {
+    console.error('Cron strategy run error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
