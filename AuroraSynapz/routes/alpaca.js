@@ -166,6 +166,186 @@ router.get('/cron-sync', async (req, res) => {
   }
 });
 
+// ── Simons Phase 2: paper trading execution (Board approval 2026-07-28) ──────
+// TRADING_MODE env var: 'dry-run' (default) | 'paper'
+// Paper mode uses ALPACA_PAPER_KEY / ALPACA_PAPER_SECRET (separate from live keys).
+// Guardrails enforced: 25% max position, 8% stop-loss, 15% drawdown circuit breaker.
+
+function tradingMode() {
+  return (process.env.TRADING_MODE || 'dry-run').toLowerCase();
+}
+
+// Compute target portfolio allocation from signal outputs.
+// Normal: top-3 ETFs at 20% each (60%), top-2 overlay at 10% each (20%), 20% cash.
+// Defensive: BND 40%, GLD 40%, 20% cash — overlay ignored.
+function computeTargets(etfTop3, overlaySelected, defensive) {
+  const targets = {};
+  if (defensive) {
+    targets['BND'] = 0.40;
+    targets['GLD'] = 0.40;
+  } else {
+    const etfSlot = etfTop3.length > 0 ? Math.min(0.20, 0.60 / etfTop3.length) : 0;
+    for (const sym of etfTop3) targets[sym] = etfSlot;
+    const eqSlot  = overlaySelected.length > 0 ? Math.min(0.10, 0.20 / overlaySelected.length) : 0;
+    for (const sym of overlaySelected) targets[sym] = eqSlot;
+  }
+  // Hard cap: no single position > 25% (Board guardrail)
+  for (const sym of Object.keys(targets)) {
+    targets[sym] = Math.min(targets[sym], 0.25);
+  }
+  return targets;
+}
+
+async function executePaperTrades(rows, runId) {
+  if (!alpaca.isPaperConfigured()) {
+    throw new Error('Paper Alpaca keys not configured — set ALPACA_PAPER_KEY and ALPACA_PAPER_SECRET in Vercel env vars');
+  }
+
+  // 1. Get paper account state
+  const account        = await alpaca.getPaperAccount();
+  const portfolioValue = parseFloat(account.portfolio_value);
+  const equity         = parseFloat(account.equity);
+
+  // 2. Drawdown circuit breaker — 15% from peak (Board guardrail)
+  const { rows: stateRows } = await db.query(
+    `SELECT value FROM simons_state WHERE key = 'paper_watermark'`
+  );
+  let watermark = stateRows[0] ? parseFloat(stateRows[0].value) : equity;
+  if (equity > watermark) {
+    watermark = equity;
+    await db.query(
+      `INSERT INTO simons_state (key, value) VALUES ('paper_watermark', $1)
+       ON CONFLICT (key) DO UPDATE SET value = $1::text, updated_at = NOW()`,
+      [watermark]
+    );
+  }
+  const drawdown = watermark > 0 ? (watermark - equity) / watermark : 0;
+  if (drawdown >= 0.15) {
+    await db.query(
+      `INSERT INTO simons_paper_log (run_id, action, symbol, qty, notes) VALUES ($1, 'circuit_breaker', 'ALL', 0, $2)`,
+      [runId, `Circuit breaker: ${(drawdown*100).toFixed(1)}% drawdown from $${watermark.toFixed(2)} peak`]
+    );
+    return {
+      circuit_breaker: true,
+      drawdown_pct: (drawdown * 100).toFixed(2),
+      watermark,
+      equity,
+      orders_placed: 0,
+      message: `Circuit breaker triggered: ${(drawdown*100).toFixed(1)}% drawdown exceeds 15% limit. No orders placed.`,
+    };
+  }
+
+  // 3. Derive signal selections from logged rows
+  const etfTop3        = rows.filter(r => r.layer === 'etf_rotation'     && r.selected).map(r => r.symbol);
+  const overlaySelected = rows.filter(r => r.layer === 'momentum_overlay' && r.selected).map(r => r.symbol);
+  const defensive       = rows.some(r => r.layer === 'defensive' && r.selected);
+  const targets         = computeTargets(etfTop3, overlaySelected, defensive);
+  const targetSymbols   = Object.keys(targets);
+
+  // 4. Current paper positions
+  const positions    = await alpaca.getPaperPositions();
+  const orders       = [];
+
+  // 5. Sell positions no longer in target allocation
+  for (const pos of positions) {
+    if (targetSymbols.includes(pos.symbol)) continue;
+    try {
+      const order = await alpaca.submitPaperOrder({
+        symbol:        pos.symbol,
+        qty:           pos.qty,
+        side:          'sell',
+        type:          'market',
+        time_in_force: 'day',
+      });
+      orders.push({ action: 'sell', symbol: pos.symbol, qty: pos.qty, order_id: order.id });
+      await db.query(
+        `INSERT INTO simons_paper_log (run_id, action, symbol, qty, order_id, notes) VALUES ($1,'sell',$2,$3,$4,'position closed — not in target allocation')`,
+        [runId, pos.symbol, pos.qty, order.id]
+      );
+    } catch (err) {
+      console.error(`Paper sell error [${pos.symbol}]:`, err.message);
+    }
+  }
+
+  // 6. Buy / rebalance target positions
+  for (const [symbol, targetPct] of Object.entries(targets)) {
+    const targetValue = portfolioValue * targetPct;
+    // Get latest ask price from market data
+    let price = 0;
+    try {
+      const q = await alpaca.getLatestQuote(symbol);
+      price = parseFloat(q.quote?.ap || q.quote?.bp || 0);
+    } catch (err) {
+      console.error(`Quote fetch error [${symbol}]:`, err.message);
+      continue;
+    }
+    if (!price) continue;
+
+    const targetShares  = targetValue / price;
+    const currentPos    = positions.find(p => p.symbol === symbol);
+    const currentShares = currentPos ? parseFloat(currentPos.qty) : 0;
+    const diffShares    = targetShares - currentShares;
+
+    if (Math.abs(diffShares) < 0.001) continue; // negligible rebalance, skip
+
+    const side = diffShares > 0 ? 'buy' : 'sell';
+    const qty  = Math.abs(diffShares).toFixed(6);
+
+    try {
+      const order = await alpaca.submitPaperOrder({
+        symbol,
+        qty,
+        side,
+        type:          'market',
+        time_in_force: 'day',
+      });
+      const stopPrice = side === 'buy' ? parseFloat((price * 0.92).toFixed(2)) : null;
+      orders.push({ action: side, symbol, qty, order_id: order.id, stop_price: stopPrice });
+      await db.query(
+        `INSERT INTO simons_paper_log (run_id, action, symbol, qty, order_id, target_pct, stop_price, notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'rebalance to target allocation')`,
+        [runId, side, symbol, qty, order.id, targetPct, stopPrice]
+      );
+
+      // 8% stop-loss on buys (Board guardrail)
+      if (side === 'buy' && stopPrice) {
+        try {
+          const stopOrder = await alpaca.submitPaperOrder({
+            symbol,
+            qty,
+            side:          'sell',
+            type:          'stop',
+            stop_price:    stopPrice,
+            time_in_force: 'gtc',
+          });
+          orders.push({ action: 'stop_loss', symbol, qty, stop_price: stopPrice, order_id: stopOrder.id });
+          await db.query(
+            `INSERT INTO simons_paper_log (run_id, action, symbol, qty, order_id, stop_price, notes)
+             VALUES ($1,'stop_loss',$2,$3,$4,$5,'8% stop-loss guard')`,
+            [runId, symbol, qty, stopOrder.id, stopPrice]
+          );
+        } catch (stopErr) {
+          console.error(`Stop order error [${symbol}]:`, stopErr.message);
+        }
+      }
+    } catch (err) {
+      console.error(`Paper ${side} error [${symbol}]:`, err.message);
+    }
+  }
+
+  return {
+    circuit_breaker:  false,
+    drawdown_pct:     (drawdown * 100).toFixed(2),
+    watermark,
+    equity,
+    portfolio_value:  portfolioValue,
+    targets,
+    defensive_posture: defensive,
+    orders_placed:    orders.length,
+    orders,
+  };
+}
+
 // ── Simons Phase 1: strategy signal computation — DRY-RUN ONLY ───
 // Board approval 2026-06-29; Head of IT sign-off 2026-07-04.
 // This code path computes and LOGS signals to strategy_signals.
@@ -199,7 +379,8 @@ function pctReturn(closes, lookback) {
 async function runStrategySignals() {
   if (!alpaca.isConfigured()) throw new Error('Alpaca API keys not configured');
 
-  const runId  = `dryrun-${new Date().toISOString()}`;
+  const mode   = tradingMode();
+  const runId  = `${mode}-${new Date().toISOString()}`;
   const closes = {};
   for (const sym of [...new Set([...CORE_ETFS, ...OVERLAY_EQUITIES])]) {
     try {
@@ -253,19 +434,25 @@ async function runStrategySignals() {
     await db.query(`
       INSERT INTO strategy_signals
         (run_id, run_mode, layer, symbol, momentum_short, momentum_long, composite_score, rank, selected, notes)
-      VALUES ($1, 'dry-run', $2, $3, $4, $5, $6, $7, $8, $9)
-    `, [runId, r.layer, r.symbol, r.short, r.long, r.score, r.rank, r.selected, r.notes]);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, [runId, mode, r.layer, r.symbol, r.short, r.long, r.score, r.rank, r.selected, r.notes]);
   }
 
-  return {
-    run_id: runId,
-    dry_run: true,
-    orders_placed: 0,
-    signals_logged: rows.length,
-    etf_top3: etf.slice(0, 3).map(e => e.sym),
+  const base = {
+    run_id:           runId,
+    run_mode:         mode,
+    signals_logged:   rows.length,
+    etf_top3:         etf.slice(0, 3).map(e => e.sym),
     overlay_selected: eq.filter((e, i) => i < 2 && e.score !== null && e.score > OVERLAY_THRESHOLD).map(e => e.sym),
     defensive_posture: defensive,
   };
+
+  if (mode === 'paper') {
+    const tradeResult = await executePaperTrades(rows, runId);
+    return { ...base, ...tradeResult };
+  }
+
+  return { ...base, dry_run: true, orders_placed: 0 };
 }
 
 // ── POST /api/alpaca/strategy-run — admin-triggered dry run ──────

@@ -210,6 +210,32 @@ async function setup() {
     CREATE INDEX IF NOT EXISTS strategy_signals_run
       ON strategy_signals (run_id);
   `);
+
+  // Simons Phase 2 — paper trading state and order log (Board approval 2026-07-28).
+  // simons_state: key/value store for watermark and other Simons runtime state.
+  // simons_paper_log: immutable record of every paper order submitted.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS simons_state (
+      key        TEXT        PRIMARY KEY,
+      value      TEXT        NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS simons_paper_log (
+      id          SERIAL      PRIMARY KEY,
+      run_id      TEXT        NOT NULL,
+      action      TEXT        NOT NULL,
+      symbol      TEXT        NOT NULL,
+      qty         NUMERIC,
+      order_id    TEXT,
+      target_pct  NUMERIC,
+      stop_price  NUMERIC,
+      notes       TEXT,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS simons_paper_log_run
+      ON simons_paper_log (run_id);
+  `);
 }
 
 module.exports = setup;
