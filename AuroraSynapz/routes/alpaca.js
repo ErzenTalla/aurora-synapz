@@ -196,19 +196,25 @@ function computeTargets(etfTop3, overlaySelected, defensive) {
   return targets;
 }
 
-async function executePaperTrades(rows, runId) {
-  if (!alpaca.isPaperConfigured()) {
+async function executePaperTrades(rows, runId, mode) {
+  mode = mode || 'paper';
+  const isLive = mode === 'live';
+
+  if (isLive && !alpaca.isConfigured()) {
+    throw new Error('Live Alpaca keys not configured');
+  }
+  if (!isLive && !alpaca.isPaperConfigured()) {
     throw new Error('Paper Alpaca keys not configured — set ALPACA_PAPER_KEY and ALPACA_PAPER_SECRET in Vercel env vars');
   }
 
-  // 1. Get paper account state
-  const account        = await alpaca.getPaperAccount();
+  // 1. Get account state
+  const account        = await (isLive ? alpaca.getAccount() : alpaca.getPaperAccount());
   const portfolioValue = parseFloat(account.portfolio_value);
   const equity         = parseFloat(account.equity);
 
   // 2. Drawdown circuit breaker — 15% from peak (Board guardrail)
   const { rows: stateRows } = await db.query(
-    `SELECT value FROM simons_state WHERE key = 'paper_watermark'`
+    `SELECT value FROM simons_state WHERE key = '${isLive ? 'live' : 'paper'}_watermark'`
   );
   let watermark = stateRows[0] ? parseFloat(stateRows[0].value) : equity;
   if (equity > watermark) {
@@ -243,14 +249,14 @@ async function executePaperTrades(rows, runId) {
   const targetSymbols   = Object.keys(targets);
 
   // 4. Current paper positions
-  const positions    = await alpaca.getPaperPositions();
+  const positions    = await (isLive ? alpaca.getPositions() : alpaca.getPaperPositions());
   const orders       = [];
 
   // 5. Sell positions no longer in target allocation
   for (const pos of positions) {
     if (targetSymbols.includes(pos.symbol)) continue;
     try {
-      const order = await alpaca.submitPaperOrder({
+      const order = await (isLive ? alpaca.submitOrder : alpaca.submitPaperOrder)({
         symbol:        pos.symbol,
         qty:           pos.qty,
         side:          'sell',
@@ -310,7 +316,7 @@ async function executePaperTrades(rows, runId) {
       // 8% stop-loss on buys (Board guardrail)
       if (side === 'buy' && stopPrice) {
         try {
-          const stopOrder = await alpaca.submitPaperOrder({
+          const stopOrder = await (isLive ? alpaca.submitOrder : alpaca.submitPaperOrder)({
             symbol,
             qty,
             side:          'sell',
@@ -447,8 +453,8 @@ async function runStrategySignals() {
     defensive_posture: defensive,
   };
 
-  if (mode === 'paper') {
-    const tradeResult = await executePaperTrades(rows, runId);
+  if (mode === 'paper' || mode === 'live') {
+    const tradeResult = await executePaperTrades(rows, runId, mode);
     return { ...base, ...tradeResult };
   }
 
