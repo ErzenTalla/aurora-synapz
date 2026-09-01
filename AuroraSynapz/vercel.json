@@ -16,7 +16,7 @@
     },
     {
       "path": "/api/alpaca/cron-strategy-run",
-      "schedule": "15 21 * * 1-5"
+      "schedule": "45 19 * * 1-5"
     }
   ]
 }

@@ -298,7 +298,7 @@ async function executePaperTrades(rows, runId, mode) {
     const qty  = Math.abs(diffShares).toFixed(6);
 
     try {
-      const order = await alpaca.submitPaperOrder({
+      const order = await (isLive ? alpaca.submitOrder : alpaca.submitPaperOrder)({
         symbol,
         qty,
         side,
