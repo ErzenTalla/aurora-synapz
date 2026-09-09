@@ -46,6 +46,11 @@ router.get('/holdings', async (req, res) => {
     );
     const enriched = rows.map(h => ({
       ...h,
+      shares:          parseFloat(h.shares),
+      price:           parseFloat(h.price),
+      avg_cost:        parseFloat(h.avg_cost),
+      day_change:      parseFloat(h.day_change),
+      day_chg_pct:     parseFloat(h.day_chg_pct),
       market_value:    parseFloat(h.shares) * parseFloat(h.price),
       total_gain:      parseFloat(h.shares) * (parseFloat(h.price) - parseFloat(h.avg_cost)),
       total_gain_pct:  ((parseFloat(h.price) - parseFloat(h.avg_cost)) / parseFloat(h.avg_cost)) * 100,
