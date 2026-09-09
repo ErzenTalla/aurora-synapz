@@ -548,3 +548,33 @@ router.use((err, req, res, next) => {
 });
 
 module.exports = router;
+
+// ── POST /api/admin/fund-reset — one-time fix to correct corrupted fund units
+// Resets fund to 100 units at current Alpaca portfolio value.
+// Admin-only. Safe to run once — idempotent if run again with correct state.
+router.post('/fund-reset', requireAdmin, async (req, res) => {
+  try {
+    const alpaca = require('../services/alpaca');
+    const account = await alpaca.getAccount();
+    const totalValue = parseFloat(account.portfolio_value);
+    const RESET_UNITS = 100; // $100 invested = 100 units at $1/unit inception
+    const unitPrice = totalValue / RESET_UNITS;
+
+    // Reset fund table
+    await db.query(
+      `UPDATE fund SET total_value=$1, total_units=$2, unit_price=$3, updated_at=NOW() WHERE id=1`,
+      [totalValue, RESET_UNITS, unitPrice]
+    );
+
+    // Reset the single client (Erzen) to 100 units
+    await db.query(
+      `UPDATE portfolios SET units_owned=$1, total_value=$2, updated_at=NOW()`,
+      [RESET_UNITS, totalValue]
+    );
+
+    res.json({ success: true, totalValue, total_units: RESET_UNITS, unitPrice, message: 'Fund reset complete. Run cron-sync next.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
