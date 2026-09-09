@@ -32,7 +32,18 @@ router.get('/overview', async (req, res) => {
     const allTimeGain    = parseFloat(portfolio.total_value) - parseFloat(portfolio.cash_balance) - totalInvested;
     const allTimeGainPct = totalInvested > 0 ? (allTimeGain / totalInvested) * 100 : 0;
 
-    res.json({ ...portfolio, total_invested: totalInvested, all_time_gain: allTimeGain, all_time_gain_pct: allTimeGainPct });
+    res.json({
+      ...portfolio,
+      total_value:    parseFloat(portfolio.total_value),
+      cash_balance:   parseFloat(portfolio.cash_balance),
+      day_change:     parseFloat(portfolio.day_change),
+      day_change_pct: parseFloat(portfolio.day_change_pct),
+      ytd_return:     parseFloat(portfolio.ytd_return),
+      ytd_return_pct: parseFloat(portfolio.ytd_return_pct),
+      total_invested: totalInvested,
+      all_time_gain: allTimeGain,
+      all_time_gain_pct: allTimeGainPct,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

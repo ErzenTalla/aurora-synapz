@@ -578,3 +578,44 @@ router.post('/fund-reset', requireAdmin, async (req, res) => {
   }
 });
 
+
+// ── POST /api/admin/data-clean — remove seeded demo data from real user account
+router.post('/data-clean', async (req, res) => {
+  try {
+    const { rows: [user] } = await db.query(
+      `SELECT id FROM users WHERE email = 'erzentalla1@gmail.com'`
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const userId = user.id;
+
+    // Delete seeded transactions (keep real user-initiated ones from Jun 20 onwards)
+    const txResult = await db.query(
+      `DELETE FROM transactions WHERE user_id = $1 AND created_at < '2026-06-18'`,
+      [userId]
+    );
+
+    // Delete fake performance history (keep only real cron data from Sep 2026+)
+    const phResult = await db.query(
+      `DELETE FROM performance_history WHERE user_id = $1 AND date < '2026-09-01'`,
+      [userId]
+    );
+
+    // Delete seeded documents (all placeholder — real docs don't exist yet)
+    const docResult = await db.query(
+      `DELETE FROM documents WHERE user_id = $1`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      deleted: {
+        transactions: txResult.rowCount,
+        performance_history: phResult.rowCount,
+        documents: docResult.rowCount,
+      },
+      message: 'Seeded demo data removed. Real data from Alpaca remains.',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
