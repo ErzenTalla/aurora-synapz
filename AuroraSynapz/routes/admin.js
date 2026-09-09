@@ -619,3 +619,41 @@ router.post('/data-clean', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ── POST /api/admin/cleanup-test-accounts — reset non-real client portfolios to 0 and remove test contacts
+router.post('/cleanup-test-accounts', async (req, res) => {
+  try {
+    // Reset portfolios for non-admin test accounts (Endrit, Blerina) to 0 units
+    const portfolioResult = await db.query(`
+      UPDATE portfolios SET units_owned=0, total_value=0, cash_balance=0,
+        day_change=0, day_change_pct=0, ytd_return=0, ytd_return_pct=0, updated_at=NOW()
+      WHERE user_id IN (
+        SELECT id FROM users WHERE email IN ('endrittalla66@gmail.com','blerinamahmuti1999@gmail.com')
+      )
+    `);
+
+    // Delete holdings for test accounts
+    const holdingsResult = await db.query(`
+      DELETE FROM holdings WHERE user_id IN (
+        SELECT id FROM users WHERE email IN ('endrittalla66@gmail.com','blerinamahmuti1999@gmail.com')
+      )
+    `);
+
+    // Delete test/dummy contact inquiries
+    const contactsResult = await db.query(`
+      DELETE FROM contacts WHERE email LIKE '%e2etest%' OR name = 'Matthew Walker'
+    `);
+
+    res.json({
+      success: true,
+      updated: {
+        portfolios_zeroed: portfolioResult.rowCount,
+        holdings_removed: holdingsResult.rowCount,
+        contacts_removed: contactsResult.rowCount,
+      },
+      message: 'Test account portfolios zeroed and dummy contacts removed.',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
