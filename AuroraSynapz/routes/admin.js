@@ -641,7 +641,7 @@ router.post('/cleanup-test-accounts', async (req, res) => {
 
     // Delete test/dummy contact inquiries
     const contactsResult = await db.query(`
-      DELETE FROM contacts WHERE email LIKE '%e2etest%' OR name = 'Matthew Walker'
+      DELETE FROM contacts WHERE email LIKE '%e2etest%' OR (first_name = 'Matthew' AND last_name = 'Walker')
     `);
 
     res.json({
