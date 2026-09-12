@@ -3,6 +3,10 @@ const db       = require('../db/index');
 const apiAuth  = require('../middleware/apiAuth');
 
 const router = express.Router();
+
+// ── In-memory response cache for /latest ──────────────────────────────────
+// Populated after each cron run; serves cached response until run_id changes.
+let signalCache = { run_id: null, payload: null };
 const DISCLAIMER = 'For informational purposes only. Not investment advice. Past performance does not guarantee future results.';
 
 function assetClass(symbol) {
@@ -46,6 +50,12 @@ router.get('/latest', apiAuth, async (req, res) => {
     if (!runRows.length) return res.status(404).json({ error: 'No signals available yet', code: 'NO_SIGNALS' });
 
     const { run_id, run_mode, created_at } = runRows[0];
+
+    // Serve from cache if run_id hasn't changed since last cron
+    if (signalCache.run_id === run_id && signalCache.payload) {
+      return res.json(signalCache.payload);
+    }
+
     const market_date = new Date(created_at).toISOString().split('T')[0];
 
     // Get selected signals for this run
@@ -79,7 +89,7 @@ router.get('/latest', apiAuth, async (req, res) => {
       asset_class:   assetClass(s.symbol),
     }));
 
-    res.json({
+    const payload = {
       run_id,
       generated_at:      created_at,
       market_date,
@@ -89,7 +99,10 @@ router.get('/latest', apiAuth, async (req, res) => {
       signals:           signalArray,
       cash_weight:       circuit_breaker ? 1.0 : parseFloat(cashWeight.toFixed(4)),
       disclaimer:        DISCLAIMER,
-    });
+    };
+    // Cache response for this run_id — avoids redundant DB queries until next cron
+    signalCache = { run_id, payload };
+    res.json(payload);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch signals' });
