@@ -10,6 +10,7 @@ const portalRoutes  = require('./routes/portal');
 const stripeRoutes  = require('./routes/stripe');
 const alpacaRoutes  = require('./routes/alpaca');
 const adminRoutes   = require('./routes/admin');
+const signalRoutes  = require('./routes/signals');
 
 const app = express();
 app.use(cors());
@@ -29,6 +30,7 @@ app.use('/api/portal',  portalRoutes);
 app.use('/api/stripe',  stripeRoutes);
 app.use('/api/alpaca',  alpacaRoutes);
 app.use('/api/admin',   adminRoutes);
+app.use('/api/v1/signals', signalRoutes);
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

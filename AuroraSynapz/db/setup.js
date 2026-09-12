@@ -236,6 +236,30 @@ async function setup() {
     CREATE INDEX IF NOT EXISTS simons_paper_log_run
       ON simons_paper_log (run_id);
   `);
+
+  // Signal API — Tier 1 (ADR-001, Board approved 2026-09-12)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS api_clients (
+      id            SERIAL      PRIMARY KEY,
+      name          TEXT        NOT NULL,
+      api_key_hash  TEXT        NOT NULL UNIQUE,
+      active        BOOLEAN     NOT NULL DEFAULT TRUE,
+      calls_today   INTEGER     NOT NULL DEFAULT 0,
+      window_date   DATE        NOT NULL DEFAULT CURRENT_DATE,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS api_usage_log (
+      id          SERIAL      PRIMARY KEY,
+      client_id   INTEGER     NOT NULL REFERENCES api_clients(id),
+      endpoint    TEXT        NOT NULL,
+      status_code INTEGER,
+      response_ms INTEGER,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS api_usage_log_client
+      ON api_usage_log (client_id, created_at);
+  `);
 }
 
 module.exports = setup;

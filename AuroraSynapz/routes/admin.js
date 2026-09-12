@@ -657,3 +657,56 @@ router.post('/cleanup-test-accounts', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ── POST /api/admin/api-keys/issue — issue a new Signal API key
+router.post('/api-keys/issue', async (req, res) => {
+  const crypto = require('crypto');
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'name is required' });
+  try {
+    const plainKey = 'as_live_' + crypto.randomBytes(16).toString('hex');
+    const keyHash  = crypto.createHash('sha256').update(plainKey).digest('hex');
+    const { rows: [client] } = await db.query(
+      `INSERT INTO api_clients (name, api_key_hash) VALUES ($1, $2) RETURNING id, name, created_at`,
+      [name, keyHash]
+    );
+    res.json({
+      success: true,
+      client_id: client.id,
+      name: client.name,
+      api_key: plainKey,
+      note: 'Store this key securely — it will not be shown again.',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/admin/api-keys/revoke — revoke an API key by client_id
+router.post('/api-keys/revoke', async (req, res) => {
+  const { client_id } = req.body;
+  if (!client_id) return res.status(400).json({ error: 'client_id is required' });
+  try {
+    await db.query('UPDATE api_clients SET active=FALSE WHERE id=$1', [client_id]);
+    res.json({ success: true, message: `Client ${client_id} API key revoked.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/admin/api-keys/usage — usage summary per client
+router.get('/api-keys/usage', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT c.id, c.name, c.active, c.calls_today,
+             COUNT(l.id) AS total_calls,
+             MAX(l.created_at) AS last_call_at
+      FROM api_clients c
+      LEFT JOIN api_usage_log l ON l.client_id = c.id
+      GROUP BY c.id ORDER BY c.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
