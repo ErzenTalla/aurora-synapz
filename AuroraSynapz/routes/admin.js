@@ -710,3 +710,14 @@ router.get('/api-keys/usage', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ── POST /api/admin/run-migration — re-run DB setup to create any new tables
+router.post('/run-migration', async (req, res) => {
+  try {
+    const setup = require('../db/setup');
+    await setup();
+    res.json({ success: true, message: 'DB migration complete.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
