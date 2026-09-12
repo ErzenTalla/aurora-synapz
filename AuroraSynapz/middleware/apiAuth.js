@@ -36,10 +36,15 @@ module.exports = async function apiAuth(req, res, next) {
 
   // Rate limit check
   if (client.calls_today >= RATE_LIMIT) {
+    const now = new Date();
+    const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+    const secondsUntilReset = Math.ceil((midnight - now) / 1000);
+    res.set('Retry-After', String(secondsUntilReset));
     return res.status(429).json({
       error: 'Rate limit exceeded. Maximum 10 calls per day.',
       code: 'RATE_LIMIT_EXCEEDED',
-      retry_after: 'Tomorrow at 00:00 UTC',
+      retry_after: secondsUntilReset,
+      resets_at: midnight.toISOString(),
     });
   }
 

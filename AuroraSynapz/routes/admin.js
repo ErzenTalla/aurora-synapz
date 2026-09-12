@@ -539,6 +539,58 @@ router.post('/invest', async (req, res) => {
   }
 });
 
+
+// ── GET /api/admin/api-keys — list all API clients ───────────────────────
+router.get('/api-keys', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT id, name, active, calls_today, window_date, created_at
+      FROM api_clients
+      ORDER BY created_at DESC
+    `);
+    res.json({ clients: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/admin/api-keys/revoke — revoke an API key ─────────────────
+router.post('/api-keys/revoke', async (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: 'Missing client id' });
+  try {
+    const { rowCount } = await db.query(
+      'UPDATE api_clients SET active = FALSE WHERE id = $1', [id]
+    );
+    if (rowCount === 0) return res.status(404).json({ error: 'Client not found' });
+    res.json({ success: true, id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/admin/api-usage — usage per client per day ─────────────────
+router.get('/api-usage', async (req, res) => {
+  try {
+    const days = Math.min(parseInt(req.query.days || '30'), 90);
+    const { rows } = await db.query(`
+      SELECT
+        c.name AS client_name,
+        DATE(l.logged_at) AS usage_date,
+        COUNT(*) AS call_count,
+        AVG(l.response_ms)::int AS avg_ms
+      FROM api_usage_log l
+      JOIN api_clients c ON c.id = l.client_id
+      WHERE l.logged_at >= NOW() - ($1 || ' days')::INTERVAL
+      GROUP BY c.name, DATE(l.logged_at)
+      ORDER BY usage_date DESC, call_count DESC
+    `, [days]);
+    res.json({ days, rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Multer errors (oversized file, wrong type) land here instead of crashing
 router.use((err, req, res, next) => {
   if (err instanceof multer.MulterError || err.message?.includes('Only PDF')) {
