@@ -50,7 +50,7 @@ router.get('/latest', apiAuth, async (req, res) => {
 
     // Get selected signals for this run
     const { rows: signals } = await db.query(`
-      SELECT symbol, selected, target_pct, notes
+      SELECT symbol, selected, rank, notes
       FROM strategy_signals
       WHERE run_id = $1 AND selected = TRUE
       ORDER BY rank ASC
