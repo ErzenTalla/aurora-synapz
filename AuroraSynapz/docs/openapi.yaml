@@ -1,0 +1,374 @@
+openapi: 3.1.0
+info:
+  title: AuroraSynapz Signal API
+  version: 1.0.0
+  description: |
+    The AuroraSynapz Signal API delivers AI-generated portfolio rebalancing signals
+    computed by the Simons strategy engine. Signals represent ranked equity and ETF
+    selections with target portfolio weights, updated each trading day (Mon–Fri) at
+    approximately 19:45 UTC.
+
+    **Disclaimer:** For informational purposes only. Not investment advice.
+    Past performance does not guarantee future results.
+  contact:
+    name: AlpineTech
+    email: erzentalla1@gmail.com
+
+servers:
+  - url: https://aurorasyanapz.com
+    description: Production
+
+tags:
+  - name: Signals
+    description: Portfolio signal endpoints
+
+paths:
+  /api/v1/signals/status:
+    get:
+      operationId: getSignalStatus
+      tags: [Signals]
+      summary: Health check — no authentication required
+      description: |
+        Returns the status of the signal engine: last run ID, timestamp, trading mode,
+        and circuit-breaker state. This endpoint is public and does not require an API key.
+      responses:
+        '200':
+          description: Status OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              example:
+                status: ok
+                last_run_id: "run-2026-09-12-001"
+                last_run_at: "2026-09-12T19:45:03.221Z"
+                trading_mode: paper
+                circuit_breaker: false
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Status check failed
+
+  /api/v1/signals/latest:
+    get:
+      operationId: getLatestSignals
+      tags: [Signals]
+      summary: Most recent signal set
+      description: |
+        Returns the latest portfolio signal set from the most recent cron run.
+        Responses are cached in-memory per run_id — repeated calls within the
+        same trading day return the same payload without additional DB queries.
+
+        Consumes 1 rate-limit call.
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Latest signals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LatestResponse'
+              example:
+                run_id: "run-2026-09-12-001"
+                generated_at: "2026-09-12T19:45:03.221Z"
+                market_date: "2026-09-12"
+                trading_mode: paper
+                defensive_posture: false
+                circuit_breaker: false
+                signals:
+                  - symbol: SPY
+                    action: buy
+                    target_weight: 0.2667
+                    asset_class: etf
+                  - symbol: QQQ
+                    action: buy
+                    target_weight: 0.2667
+                    asset_class: etf
+                  - symbol: AAPL
+                    action: buy
+                    target_weight: 0.2667
+                    asset_class: equity
+                cash_weight: 0.2
+                disclaimer: "For informational purposes only. Not investment advice. Past performance does not guarantee future results."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: No signals available yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: No signals available yet
+                code: NO_SIGNALS
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Failed to fetch signals
+
+  /api/v1/signals/history:
+    get:
+      operationId: getSignalHistory
+      tags: [Signals]
+      summary: Signal history for the last N days
+      description: |
+        Returns one signal set per trading day for the past days days (max 90, default 7).
+        Only days with completed cron runs are included — weekends and holidays are absent.
+
+        Consumes 1 rate-limit call.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: days
+          in: query
+          description: Number of calendar days to look back (1–90, default 7)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+            default: 7
+          example: 30
+      responses:
+        '200':
+          description: Signal history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+              example:
+                days: 7
+                count: 5
+                history:
+                  - run_id: "run-2026-09-12-001"
+                    market_date: "2026-09-12"
+                    generated_at: "2026-09-12T19:45:03.221Z"
+                    trading_mode: paper
+                    signals:
+                      - symbol: SPY
+                        action: buy
+                        target_weight: 0.2667
+                        asset_class: etf
+                disclaimer: "For informational purposes only. Not investment advice. Past performance does not guarantee future results."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Failed to fetch signal history
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API key provisioned by AlpineTech admin. Pass the raw key value —
+        the server hashes it internally with SHA-256 for secure verification.
+
+  schemas:
+    StatusResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        last_run_id:
+          type: string
+          nullable: true
+          description: Unique identifier of the most recent cron run
+        last_run_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: ISO 8601 timestamp of the most recent run
+        trading_mode:
+          type: string
+          nullable: true
+          enum: [paper, live]
+          description: Whether Simons is running in paper or live mode
+        circuit_breaker:
+          type: boolean
+          description: True when the circuit breaker is active — signals are suppressed
+
+    Signal:
+      type: object
+      required: [symbol, action, target_weight, asset_class]
+      properties:
+        symbol:
+          type: string
+          description: Ticker symbol (e.g. SPY, AAPL)
+        action:
+          type: string
+          enum: [buy]
+          description: Always "buy" — Simons signals are long-only
+        target_weight:
+          type: number
+          format: float
+          description: Target portfolio weight (0–1). Equity allocation is 80% split equally across selected signals.
+        asset_class:
+          type: string
+          enum: [etf, equity]
+          description: Asset class — etf for SPY/QQQ/VTI/BND/GLD, equity otherwise
+
+    LatestResponse:
+      type: object
+      required: [run_id, generated_at, market_date, trading_mode, defensive_posture, circuit_breaker, signals, cash_weight, disclaimer]
+      properties:
+        run_id:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
+        market_date:
+          type: string
+          format: date
+        trading_mode:
+          type: string
+          enum: [paper, live]
+        defensive_posture:
+          type: boolean
+          description: True when BND is selected and SPY is not — indicates a risk-off allocation
+        circuit_breaker:
+          type: boolean
+          description: When true, signals array is empty and cash_weight is 1.0
+        signals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Signal'
+          description: Empty array when circuit_breaker is active
+        cash_weight:
+          type: number
+          format: float
+          description: Portfolio weight held as cash (normally 0.20; 1.0 when circuit breaker is active)
+        disclaimer:
+          type: string
+
+    HistoryRun:
+      type: object
+      required: [run_id, market_date, generated_at, trading_mode, signals]
+      properties:
+        run_id:
+          type: string
+        market_date:
+          type: string
+          format: date
+        generated_at:
+          type: string
+          format: date-time
+        trading_mode:
+          type: string
+          enum: [paper, live]
+        signals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Signal'
+
+    HistoryResponse:
+      type: object
+      required: [days, count, history, disclaimer]
+      properties:
+        days:
+          type: integer
+          description: Requested look-back window
+        count:
+          type: integer
+          description: Number of runs returned
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoryRun'
+        disclaimer:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - NO_KEY
+            - INVALID_KEY
+            - KEY_REVOKED
+            - RATE_LIMIT_EXCEEDED
+            - NO_SIGNALS
+            - DB_ERROR
+        retry_after:
+          type: integer
+          description: Seconds until rate-limit resets (present on 429 only)
+        resets_at:
+          type: string
+          format: date-time
+          description: UTC timestamp when the daily counter resets (present on 429 only)
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing:
+              value:
+                error: Missing X-API-Key header
+                code: NO_KEY
+            invalid:
+              value:
+                error: Invalid API key
+                code: INVALID_KEY
+
+    Forbidden:
+      description: API key exists but has been revoked
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: API key revoked
+            code: KEY_REVOKED
+
+    RateLimitExceeded:
+      description: Daily rate limit (10 calls) exceeded
+      headers:
+        Retry-After:
+          description: Seconds until the daily counter resets at midnight UTC
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Rate limit exceeded. Maximum 10 calls per day.
+            code: RATE_LIMIT_EXCEEDED
+            retry_after: 9600
+            resets_at: "2026-09-13T00:00:00.000Z"
