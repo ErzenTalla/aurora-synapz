@@ -1,8 +1,6 @@
 const crypto = require('crypto');
 const db     = require('../db/index');
 
-const RATE_LIMIT = 10; // calls per day per key
-
 module.exports = async function apiAuth(req, res, next) {
   const start = Date.now();
 
@@ -34,14 +32,15 @@ module.exports = async function apiAuth(req, res, next) {
     client.calls_today = 0;
   }
 
-  // Rate limit check
-  if (client.calls_today >= RATE_LIMIT) {
+  // Rate limit check — NULL rate_limit = unlimited (enterprise / custom plans)
+  const rateLimit = client.rate_limit != null ? Number(client.rate_limit) : null;
+  if (rateLimit !== null && client.calls_today >= rateLimit) {
     const now = new Date();
     const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
     const secondsUntilReset = Math.ceil((midnight - now) / 1000);
     res.set('Retry-After', String(secondsUntilReset));
     return res.status(429).json({
-      error: 'Rate limit exceeded. Maximum 10 calls per day.',
+      error: `Rate limit exceeded. Maximum ${rateLimit} calls per day.`,
       code: 'RATE_LIMIT_EXCEEDED',
       retry_after: secondsUntilReset,
       resets_at: midnight.toISOString(),

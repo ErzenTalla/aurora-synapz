@@ -260,6 +260,14 @@ async function setup() {
     CREATE INDEX IF NOT EXISTS api_usage_log_client
       ON api_usage_log (client_id, created_at);
   `);
+
+  // ADR-002 migration — plan tier + per-client rate limit (2026-09-24)
+  // plan: 'starter' | 'growth' | 'enterprise' | 'custom' (default 'starter')
+  // rate_limit: calls/day; NULL = unlimited (enterprise / custom negotiated)
+  await pool.query(`
+    ALTER TABLE api_clients ADD COLUMN IF NOT EXISTS plan        TEXT    NOT NULL DEFAULT 'starter';
+    ALTER TABLE api_clients ADD COLUMN IF NOT EXISTS rate_limit  INTEGER;
+  `);
 }
 
 module.exports = setup;
