@@ -17,6 +17,14 @@
     {
       "path": "/api/alpaca/cron-strategy-run",
       "schedule": "45 19 * * 1-5"
+    },
+    {
+      "path": "/api/v1/signals/uptime-check",
+      "schedule": "5 19 * * 1-5"
+    },
+    {
+      "path": "/api/v1/signals/uptime-check",
+      "schedule": "55 19 * * 1-5"
     }
   ]
 }
