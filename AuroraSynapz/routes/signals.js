@@ -153,4 +153,57 @@ router.get('/history', apiAuth, async (req, res) => {
   }
 });
 
+// ── GET /api/v1/signals/uptime-check — Vercel cron, signal window monitor ──
+// Runs at 19:05 and 19:55 UTC Mon-Fri (during 19:00-20:00 signal window).
+// Protected by CRON_SECRET. Returns 200 if healthy, 500 if service is down.
+// Vercel logs 5xx responses — Board configures alerts via Vercel dashboard.
+router.get('/uptime-check', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET || '';
+  if (cronSecret) {
+    const auth = req.headers.authorization || '';
+    if (auth !== `Bearer ${cronSecret}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+  const checkedAt = new Date().toISOString();
+  try {
+    // Check DB directly — equivalent to /status but without HTTP round-trip.
+    const { rows } = await db.query(`
+      SELECT run_id, run_mode, created_at
+      FROM strategy_signals
+      ORDER BY created_at DESC LIMIT 1
+    `);
+    const { rows: cb } = await db.query(
+      `SELECT value FROM simons_state WHERE key = 'circuit_breaker'`
+    );
+    const last = rows[0];
+    const circuitBreaker = cb[0]?.value === 'true';
+    const msSinceLast = last ? Date.now() - new Date(last.created_at).getTime() : null;
+    // Flag as degraded if last signal run is older than 26 hours (missed a full trading day).
+    const STALE_THRESHOLD_MS = 26 * 60 * 60 * 1000;
+    const isStale = msSinceLast === null || msSinceLast > STALE_THRESHOLD_MS;
+
+    if (isStale) {
+      const msg = last
+        ? `UPTIME ALERT: Signal API stale — last run ${Math.round(msSinceLast / 3600000)}h ago (run_id: ${last.run_id})`
+        : 'UPTIME ALERT: Signal API — no strategy_signals rows found';
+      console.error(`[uptime-check] ${checkedAt} — ${msg}`);
+      return res.status(500).json({ status: 'degraded', message: msg, checked_at: checkedAt });
+    }
+
+    res.json({
+      status: 'ok',
+      last_run_id:  last.run_id,
+      last_run_at:  last.created_at,
+      trading_mode: last.run_mode,
+      circuit_breaker: circuitBreaker,
+      checked_at: checkedAt,
+    });
+  } catch (err) {
+    const msg = `UPTIME ALERT: Signal API DB unreachable — ${err.message}`;
+    console.error(`[uptime-check] ${checkedAt} — ${msg}`);
+    res.status(500).json({ status: 'down', message: msg, checked_at: checkedAt });
+  }
+});
+
 module.exports = router;
