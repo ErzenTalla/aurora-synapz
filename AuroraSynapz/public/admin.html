@@ -1490,8 +1490,7 @@
     const countEl = document.getElementById('api-clients-count');
     tbody.innerHTML = '<div class="empty-state">Loading…</div>';
     try {
-      const r = await authFetch('/api/admin/api-keys');
-      const data = await r.json();
+      const data = await authFetch('/api/admin/api-keys');
       const clients = data.clients || [];
       countEl.textContent = clients.length + ' client' + (clients.length !== 1 ? 's' : '');
       if (!clients.length) { tbody.innerHTML = '<div class="empty-state">No API clients registered.</div>'; return; }
@@ -1534,8 +1533,7 @@
     tbody.innerHTML = '<div class="empty-state">Loading…</div>';
     const days = document.getElementById('usage-days-select')?.value || 30;
     try {
-      const r = await authFetch('/api/admin/api-usage?days=' + days);
-      const data = await r.json();
+      const data = await authFetch('/api/admin/api-usage?days=' + days);
       const rows = data.rows || [];
       if (!rows.length) { tbody.innerHTML = '<div class="empty-state">No usage data for this period.</div>'; return; }
       const html = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
